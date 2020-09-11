@@ -53,11 +53,18 @@ statement: varDecl
          | variable '=' expr ';'
          | functionCall ';'
          | block
+         | 'return' (expr)? ';'
+         | 'break' ';'
+         | 'continue' ';'
+         | 'while' '(' expr ')' block
+         | 'if' '(' expr ')' block ('elif' '(' expr ')' block)* ('else' block)?
+         | 'while' '(' expr ')' block
+         | 'for' '(' ((TYPE)? variable '=' expr)? ';' (expr)? ';' (variable '=' expr)? ')' block
          ;
 
 /*Tokens*/
 
-TYPE : ('uint' | 'int' | 'bool' | 'char' | 'long') ;
+TYPE : ('uint' | 'int' | 'long' | 'float' | 'bool' | 'char') ;
 
 INT : ([1-9][0-9]* | [0]) ;
 FLOAT : ([0-9]+ '.' [0-9]+) ;
