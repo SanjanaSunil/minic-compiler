@@ -1,6 +1,6 @@
 grammar Expr;
 
-prog: (varDecl)* (functionDecl)* 'func int main()' block + EOF
+prog: (varDecl | functionDecl)* 'func int main()' block + EOF
     ;
 
 literal: INT
