@@ -1,6 +1,6 @@
 grammar Expr;
 
-prog: (varDecl) + EOF
+prog: (varDecl)* (functionDecl)* 'func int main()' block + EOF
     ;
 
 literal: INT
@@ -20,7 +20,22 @@ varAssign: ID '=' expr
 varDecl: TYPE (variable | varAssign) ((',' variable) | (',' varAssign))* ';'
         ;
 
-expr: ('+' | '-') expr
+block: '{' (statement)* '}'
+     ;
+
+functionArgument: TYPE ID
+                | TYPE ID '[' ']'
+                | TYPE ID '[' ']' '[' ']'
+                ;
+
+functionDecl: 'func' (TYPE | 'void') ID '(' (functionArgument)? (',' functionArgument)* ')' block
+            ;
+
+functionCall: ID '(' (expr)? (',' expr)* ')'
+            ;
+
+expr:  functionCall
+    | ('+' | '-') expr
     | '!' expr
     | expr ('/' | '*' | '%') expr
     | expr ('+' | '-') expr
@@ -34,6 +49,11 @@ expr: ('+' | '-') expr
     | '(' expr ')'
     ;
         
+statement: varDecl
+         | variable '=' expr ';'
+         | functionCall ';'
+         | block
+         ;
 
 /*Tokens*/
 
