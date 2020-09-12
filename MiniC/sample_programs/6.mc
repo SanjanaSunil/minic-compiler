@@ -1,4 +1,4 @@
-func int main {
+func int main() {
     int n;
     input(n);
 

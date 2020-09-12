@@ -14,7 +14,7 @@ func int numberOfDigits(int n) {
     return digits;
 }
 
-func int main {
+func int main() {
     int n;
     input(n);
     
