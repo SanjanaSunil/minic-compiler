@@ -7,6 +7,7 @@ literal: INT
        | FLOAT
        | CHAR
        | BOOL
+       | STRING
        ;
 
 variable: ID
@@ -64,12 +65,13 @@ statement: varDecl
 
 /*Tokens*/
 
-TYPE : ('uint' | 'int' | 'long' | 'float' | 'bool' | 'char') ;
+TYPE : ('uint' | 'int' | 'long' | 'float' | 'bool' | 'char' | 'string') ;
 
 INT : ([1-9][0-9]* | [0]) ;
 FLOAT : ([0-9]+ '.' [0-9]+) ;
 BOOL : ('true' | 'false') ;
 CHAR : ('\'' . '\'' | '\'' '\\' [ntr] '\'') ;
+STRING : '"' .*? '"' ;
 ID : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 COMMENT : '//' ~[\r\n]*->skip; 

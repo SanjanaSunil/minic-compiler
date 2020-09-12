@@ -7,7 +7,7 @@ func int computePower(int num, int k) {
     return power;
 } 
 
-func int main {
+func int main() {
     int N, k;
     input(N, k);
 
