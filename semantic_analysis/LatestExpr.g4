@@ -4,9 +4,7 @@ grammar Expr;
 functionDecl: 'func' functype=(TYPE | 'void') ID '(' (functionArgument)? (',' functionArgument)* ')' block       #funcDecl
             ;
         
-statement: 'return' (expr)? ';'             #statReturn
-         | 'break' ';'                      #statBreak
-         | 'continue' ';'                   #statContinue
+statement: 
          | 'while' '(' expr ')' block       #statWhile
          | 'if' '(' expr ')' block ('elif' '(' expr ')' block)* ('else' block)?     #statIf
          | 'for' '(' ((TYPE)? variable '=' expr)? ';' (expr)? ';' (variable '=' expr)? ')' block    #statFor

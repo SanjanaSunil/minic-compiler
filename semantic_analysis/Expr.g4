@@ -55,6 +55,8 @@ statement: varDecl                          #statVarDecl
          | block                            #statBlock
          | functionCall ';'                 #statFuncCall
          | 'return' (expr)? ';'             #statReturn
+         | 'break' ';'                      #statBreak
+         | 'continue' ';'                   #statContinue
          ;
 
 /*Tokens*/

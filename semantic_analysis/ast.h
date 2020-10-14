@@ -34,6 +34,7 @@ class ASTStatVarDecl;
 class ASTStatBlock;
 class ASTStatFuncCall;
 class ASTStatReturn;
+class ASTStatLoopControl;
 
 class ASTvisitor
 {
@@ -60,6 +61,7 @@ public:
     virtual void visit(ASTExprFuncCall &node) = 0;
     virtual void visit(ASTExpr &node) = 0;
 
+    virtual void visit(ASTStatLoopControl &node) = 0;
     virtual void visit(ASTStatReturn &node) = 0;
     virtual void visit(ASTStatFuncCall &node) = 0;
     virtual void visit(ASTStatVarDecl &node) = 0;
@@ -421,6 +423,19 @@ class ASTStatReturn : public ASTStat
 
 public:
     ASTStatReturn(ASTExpr *_return_expr) : return_expr(_return_expr) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTStatLoopControl: public ASTStat
+{
+    string control_stat;
+
+public:
+    ASTStatLoopControl(string control_stat) : control_stat(control_stat) {}
 
     virtual void accept(ASTvisitor &v)
     {

@@ -406,4 +406,18 @@ public:
         ASTStatReturn *node = new ASTStatReturn(exp);
         return (ASTStat *) node;
     }
+
+    virtual antlrcpp::Any visitStatBreak(ExprParser::StatBreakContext *context)
+    {
+        cout << "In visitStatBreak" << endl;
+        ASTStatLoopControl *node = new ASTStatLoopControl("break");
+        return (ASTStat *) node;
+    }
+
+    virtual antlrcpp::Any visitStatContinue(ExprParser::StatContinueContext *context)
+    {
+        cout << "In visitStatContinue" << endl;
+        ASTStatLoopControl *node = new ASTStatLoopControl("continue");
+        return (ASTStat *) node;
+    }
 };
