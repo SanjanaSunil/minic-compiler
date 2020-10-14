@@ -15,9 +15,9 @@ public:
     {
         cout << "In visitProg" << endl;
         ASTProg *node = new ASTProg();
-        ASTExpr *statementNode;
+        ASTStat *statementNode;
 
-        for (auto statement : context->expr())
+        for (auto statement : context->statement())
         {
             statementNode = visit(statement);
             if (statementNode != nullptr)
@@ -55,6 +55,16 @@ public:
 
         ASTVariable *node = new ASTVariable(id, param1, param2);
         return (ASTVariable *) node;
+    }
+
+    virtual antlrcpp::Any visitVariableAssign(ExprParser::VariableAssignContext *context)
+    {
+        cout << "In visitVariableAssign" << endl;
+        string id = context->ID()->getText();
+        ASTExpr* exp = visit(context->expr());
+
+        ASTVariableAssign *node = new ASTVariableAssign(id, exp);
+        return (ASTVariableAssign *) node;
     }
 
     virtual antlrcpp::Any visitExprVar(ExprParser::ExprVarContext *context)
@@ -213,5 +223,15 @@ public:
     {
         cout << "In visitExprParenthesis" << endl;
         return visit(context->expr());
+    }
+
+    virtual antlrcpp::Any visitStatVarAssign(ExprParser::StatVarAssignContext *context)
+    {
+        cout << "In visitStatVarAssign" << endl;
+        ASTVariable *var = visit(context->variable());
+        ASTExpr *exp = visit(context->expr());
+
+        ASTStatVarAssign *node = new ASTStatVarAssign(var, exp);
+        return (ASTStat *) node;
     }
 };

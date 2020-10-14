@@ -3,9 +3,6 @@ grammar Expr;
 prog: (varDecl | functionDecl)* 'func int main()' block + EOF
     ;
 
-varAssign: ID '=' expr      #varAssignRule
-         ;
-
 varDecl: TYPE (variable | varAssign) ((',' variable) | (',' varAssign))* ';'    #varDeclRule
         ;
 

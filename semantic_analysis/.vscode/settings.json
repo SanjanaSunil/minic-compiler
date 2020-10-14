@@ -6,6 +6,7 @@
         "*.tcc": "cpp",
         "mutex": "cpp",
         "thread": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "cmath": "cpp"
     }
 }

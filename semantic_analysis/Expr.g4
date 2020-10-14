@@ -1,12 +1,15 @@
 grammar Expr;
 
-prog: expr + EOF
+prog: statement + EOF
     ;
 
 variable: ID                                #varId
         | ID '[' expr ']'                   #varArrOneD
         | ID '[' expr ']' '[' expr ']'      #varArrTwoD
         ;
+
+varAssign: ID '=' expr      #variableAssign
+         ;
 
 expr: op=('+' | '-') expr                       #exprUnary
     | op='!' expr                               #exprNot
@@ -25,6 +28,9 @@ expr: op=('+' | '-') expr                       #exprUnary
     | '(' expr ')'                              #exprParenthesis
     | variable                                  #exprVar
     ;
+
+statement: variable '=' expr ';'            #statVarAssign
+         ;
 
 /*Tokens*/
 
