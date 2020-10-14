@@ -7,7 +7,6 @@ class ASTProg;
 
 class ASTExpr;
 class ASTExprUnary;
-class ASTExprNot;
 class ASTExprBinary;
 class ASTExprInt;
 class ASTExprFloat;
@@ -21,7 +20,6 @@ public:
     virtual void visit(ASTProg &node) = 0;
 
     virtual void visit(ASTExprUnary &node) = 0;
-    virtual void visit(ASTExprNot &node) = 0;
     virtual void visit(ASTExprBinary &node) = 0;
     virtual void visit(ASTExprInt &node) = 0;
     virtual void visit(ASTExprFloat &node) = 0;
@@ -71,19 +69,6 @@ class ASTExprUnary : public ASTExpr
 
 public:
     ASTExprUnary(string unary_op, ASTExpr *_exp) : unary_op(unary_op), exp(_exp) {}
-
-    virtual void accept(ASTvisitor &v)
-    {
-        v.visit(*this);
-    }
-};
-
-class ASTExprNot: public ASTExpr
-{
-    ASTExpr *exp;
-
-public:
-    ASTExprNot(ASTExpr *_exp) : exp(_exp) {}
 
     virtual void accept(ASTvisitor &v)
     {

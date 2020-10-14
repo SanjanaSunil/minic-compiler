@@ -29,22 +29,8 @@ functionCall: ID '(' (expr)? (',' expr)* ')'        #funcCall
             ;
 
 expr:  functionCall                         #exprFuncCall
-    | ('+' | '-') expr                      #exprUnary
-    | '!' expr                              #exprNot
-    | expr ('/' | '*' | '%') expr           #exprDivMulMod
-    | expr ('+' | '-') expr                 #exprAddSub
-    | expr ('<' | '<=' | '>' | '>=') expr   #exprComp
-    | expr ('==' | '!=') expr               #exprEq
-    | expr '&&' expr                        #exprAnd
-    | expr '||' expr                        #exprOr
     | '(' expr ')' '?' expr ':' expr        #exprTernary
     | variable                              #exprVar
-    | INT                                   #exprInt
-    | FLOAT                                 #exprFloat
-    | CHAR                                  #exprChar
-    | BOOL                                  #exprBool
-    | STRING                                #exprString
-    | '(' expr ')'                          #exprParenthesis
     ;
         
 statement: varDecl                          #statVarDecl

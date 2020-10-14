@@ -41,14 +41,76 @@ public:
     virtual antlrcpp::Any visitExprNot(ExprParser::ExprNotContext *context)
     {
         cout << "In visitExprNot" << endl;
+        string op = context->op->getText();
         ASTExpr *exp = visit(context->expr());
-        ASTExprNot *node = new ASTExprNot(exp);
+
+        ASTExprUnary *node = new ASTExprUnary(op, exp);
         return (ASTExpr *) node;
     }
 
     virtual antlrcpp::Any visitExprDivMulMod(ExprParser::ExprDivMulModContext *context)
     {
         cout << "In visitExprDivMulMod" << endl;
+
+        string op = context->op->getText();
+        ASTExpr *left = visit(context->expr(0));
+        ASTExpr *right = visit(context->expr(1));
+
+        ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        return (ASTExpr *) node;
+    }
+
+    virtual antlrcpp::Any visitExprAddSub(ExprParser::ExprAddSubContext *context)
+    {
+        cout << "In visitExprAddSub" << endl;
+
+        string op = context->op->getText();
+        ASTExpr *left = visit(context->expr(0));
+        ASTExpr *right = visit(context->expr(1));
+
+        ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        return (ASTExpr *) node;
+    }
+
+    virtual antlrcpp::Any visitExprComp(ExprParser::ExprCompContext *context)
+    {
+        cout << "In visitExprComp" << endl;
+
+        string op = context->op->getText();
+        ASTExpr *left = visit(context->expr(0));
+        ASTExpr *right = visit(context->expr(1));
+
+        ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        return (ASTExpr *) node;
+    }
+
+    virtual antlrcpp::Any visitExprEq(ExprParser::ExprEqContext *context)
+    {
+        cout << "In visitExprEq" << endl;
+
+        string op = context->op->getText();
+        ASTExpr *left = visit(context->expr(0));
+        ASTExpr *right = visit(context->expr(1));
+
+        ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        return (ASTExpr *) node;
+    }
+
+    virtual antlrcpp::Any visitExprAnd(ExprParser::ExprAndContext *context)
+    {
+        cout << "In visitExprAnd" << endl;
+
+        string op = context->op->getText();
+        ASTExpr *left = visit(context->expr(0));
+        ASTExpr *right = visit(context->expr(1));
+
+        ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        return (ASTExpr *) node;
+    }
+
+    virtual antlrcpp::Any visitExprOr(ExprParser::ExprOrContext *context)
+    {
+        cout << "In visitExprOr" << endl;
 
         string op = context->op->getText();
         ASTExpr *left = visit(context->expr(0));

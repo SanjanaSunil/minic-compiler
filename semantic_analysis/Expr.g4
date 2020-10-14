@@ -3,15 +3,20 @@ grammar Expr;
 prog: expr + EOF
     ;
 
-expr: op=('+' | '-') expr                   #exprUnary
-    | '!' expr                              #exprNot
-    | expr op=('/' | '*' | '%') expr        #exprDivMulMod
-    | INT                                   #exprInt
-    | FLOAT                                 #exprFloat
-    | CHAR                                  #exprChar
-    | BOOL                                  #exprBool
-    | STRING                                #exprString
-    | '(' expr ')'                          #exprParenthesis
+expr: op=('+' | '-') expr                       #exprUnary
+    | op='!' expr                                  #exprNot
+    | expr op=('/' | '*' | '%') expr            #exprDivMulMod
+    | expr op=('+' | '-') expr                  #exprAddSub
+    | expr op=('<' | '<=' | '>' | '>=') expr    #exprComp
+    | expr op=('==' | '!=') expr                #exprEq
+    | expr op='&&' expr                         #exprAnd
+    | expr op='||' expr                         #exprOr
+    | INT                                       #exprInt
+    | FLOAT                                     #exprFloat
+    | CHAR                                      #exprChar
+    | BOOL                                      #exprBool
+    | STRING                                    #exprString
+    | '(' expr ')'                              #exprParenthesis
     ;
 
 /*Tokens*/
