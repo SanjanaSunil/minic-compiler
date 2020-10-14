@@ -402,7 +402,9 @@ public:
     virtual antlrcpp::Any visitStatReturn(ExprParser::StatReturnContext *context)
     {
         cout << "In visitStatReturn" << endl;
-        ASTExpr *exp = visit(context->expr());
+        ASTExpr *exp = (ASTExpr *) nullptr;
+        if(context->expr()) exp = visit(context->expr());
+
         ASTStatReturn *node = new ASTStatReturn(exp);
         return (ASTStat *) node;
     }
@@ -457,4 +459,30 @@ public:
 
         return (ASTStat *) node;
     }
+
+    virtual antlrcpp::Any visitStatFor(ExprParser::StatForContext *context)
+    {
+        cout << "In visitStatFor" << endl;
+
+        ASTVariableDecl *var_decl = (ASTVariableDecl *) nullptr;
+        if(context->varDecl()) var_decl = visit(context->varDecl());
+
+        ASTVariableAssign *var_assign = (ASTVariableAssign *) nullptr;
+        if(context->varAssign()) var_assign = visit(context->varAssign());
+
+        ASTExpr *cond_expr = (ASTExpr *) nullptr;
+        if(context->condexpr) cond_expr =  visit(context->condexpr);
+
+        ASTVariable *var = (ASTVariable *) nullptr;
+        if(context->variable()) var = visit(context->variable());
+
+        ASTExpr *loop_expr = (ASTExpr *) nullptr;
+        if(context->loopexpr) loop_expr = visit(context->loopexpr);
+
+        ASTBlockStat *block = visit(context->block());
+
+        ASTStatFor *node = new ASTStatFor(var_decl, var_assign, cond_expr, var, loop_expr, block);
+        return (ASTStat *) nullptr;
+    }
+
 };

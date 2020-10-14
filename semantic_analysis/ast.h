@@ -37,6 +37,7 @@ class ASTStatReturn;
 class ASTStatLoopControl;
 class ASTStatWhile;
 class ASTStatIf;
+class ASTStatFor;
 
 class ASTvisitor
 {
@@ -63,6 +64,7 @@ public:
     virtual void visit(ASTExprFuncCall &node) = 0;
     virtual void visit(ASTExpr &node) = 0;
 
+    virtual void visit(ASTStatFor &node) = 0;
     virtual void visit(ASTStatIf &node) = 0;
     virtual void visit(ASTStatWhile &node) = 0;
     virtual void visit(ASTStatLoopControl &node) = 0;
@@ -466,6 +468,24 @@ class ASTStatIf : public ASTStat
 public:
     vector<ASTExpr *> exprList;
     vector<ASTBlockStat *> blockList;
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTStatFor : public ASTStat
+{
+    ASTVariableDecl *var_decl;
+    ASTVariableAssign *var_assign;
+    ASTExpr *cond_expr;
+    ASTVariable *var;
+    ASTExpr *loop_expr;
+    ASTBlockStat *block;
+
+public:
+    ASTStatFor(ASTVariableDecl *var_decl, ASTVariableAssign *var_assign, ASTExpr *cond_expr, ASTVariable *var, ASTExpr *loop_expr, ASTBlockStat *block) : var_decl(var_decl), var_assign(var_assign), cond_expr(cond_expr), var(var), loop_expr(loop_expr), block(block) {}
 
     virtual void accept(ASTvisitor &v)
     {

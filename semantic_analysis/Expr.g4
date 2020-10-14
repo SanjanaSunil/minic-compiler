@@ -59,6 +59,7 @@ statement: varDecl                          #statVarDecl
          | 'continue' ';'                   #statContinue
          | 'while' '(' expr ')' block       #statWhile
          | 'if' '(' expr ')' block ('elif' '(' expr ')' block)* ('else' block)?     #statIf
+         | 'for' '(' (varDecl | varAssign ';')? (condexpr=expr)? ';' (variable '=' loopexpr=expr)? ')' block    #statFor
          ;
 
 /*Tokens*/
