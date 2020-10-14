@@ -1,5 +1,6 @@
 func int main() {
-    string x = sd(adk, 3, "kd");
+    string x = sd(adk);
+    return 0;
 }
 
 int s = main();

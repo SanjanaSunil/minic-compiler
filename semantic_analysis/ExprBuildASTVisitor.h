@@ -398,4 +398,12 @@ public:
         ASTStatFuncCall *node = new ASTStatFuncCall(func_call);
         return (ASTStat *) node;
     }
+
+    virtual antlrcpp::Any visitStatReturn(ExprParser::StatReturnContext *context)
+    {
+        cout << "In visitStatReturn" << endl;
+        ASTExpr *exp = visit(context->expr());
+        ASTStatReturn *node = new ASTStatReturn(exp);
+        return (ASTStat *) node;
+    }
 };

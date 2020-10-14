@@ -54,6 +54,7 @@ statement: varDecl                          #statVarDecl
          | variable '=' expr ';'            #statVarAssign
          | block                            #statBlock
          | functionCall ';'                 #statFuncCall
+         | 'return' (expr)? ';'             #statReturn
          ;
 
 /*Tokens*/
