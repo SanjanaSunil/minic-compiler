@@ -106,8 +106,10 @@ public:
         string lit_type = context->TYPE()->getText();
         ASTVariableDecl *node = new ASTVariableDecl(lit_type);
 
-        ASTVariable *variableNode;
-        for (auto variable : context->variable())
+        ASTVariableDeclType *variableNode = visit(context->varDeclTypeA());
+        if (variableNode != nullptr) node->varList.push_back(variableNode);
+
+        for (auto variable : context->varDeclTypeB())
         {
             variableNode = visit(variable);
             if (variableNode != nullptr)
@@ -116,17 +118,35 @@ public:
             }
         }
 
-        ASTVariableAssign *varAssignNode;
-        for (auto varAssign : context->varAssign())
-        {
-            varAssignNode = visit(varAssign);
-            if (varAssignNode != nullptr)
-            {
-                node->varAssignList.push_back(varAssignNode);
-            }
-        }
-
         return (ASTVariableDecl *) node;
+    }
+
+    virtual antlrcpp::Any visitVariableDeclTypeA(ExprParser::VariableDeclTypeAContext *context)
+    {
+        cout << "In visitVariableDeclA" << endl;
+        ASTVariable* var = (ASTVariable *) nullptr;
+        ASTVariableAssign* var_assign = (ASTVariableAssign *) nullptr;
+
+        if(context->variable()) var = visit(context->variable());
+        if(context->varAssign()) var_assign =visit(context->varAssign());
+
+        ASTVariableDeclType *node = new ASTVariableDeclType(var, var_assign);
+
+        return (ASTVariableDeclType *) node;
+    }
+
+    virtual antlrcpp::Any visitVariableDeclTypeB(ExprParser::VariableDeclTypeBContext *context)
+    {
+        cout << "In visitVariableDeclB" << endl;
+        ASTVariable* var = (ASTVariable *) nullptr;
+        ASTVariableAssign* var_assign = (ASTVariableAssign *) nullptr;
+
+        if(context->variable()) var = visit(context->variable());
+        if(context->varAssign()) var_assign =visit(context->varAssign());
+
+        ASTVariableDeclType *node = new ASTVariableDeclType(var, var_assign);
+
+        return (ASTVariableDeclType *) node;
     }
 
     virtual antlrcpp::Any visitFuncArg(ExprParser::FuncArgContext *context)

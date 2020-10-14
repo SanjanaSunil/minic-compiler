@@ -11,6 +11,7 @@ class ASTBlockStat;
 class ASTVariable;
 class ASTVariableAssign;
 class ASTVariableDecl;
+class ASTVariableDeclType;
 
 class ASTFuncArg;
 class ASTFuncDecl;
@@ -48,6 +49,7 @@ public:
     virtual void visit(ASTVariable &node) = 0;
     virtual void visit(ASTVariableAssign &node) = 0;
     virtual void visit(ASTVariableDecl &node) = 0;
+    virtual void visit(ASTVariableDeclType &node) = 0;
     virtual void visit(ASTFuncArg &node) = 0;
     virtual void visit(ASTFuncDecl &node) = 0;
     virtual void visit(ASTFuncCall &node) = 0;
@@ -154,10 +156,22 @@ class ASTVariableDecl : public ASTnode
     string lit_type;
 
 public:
-    vector<ASTVariable*> varList;
-    vector<ASTVariableAssign*> varAssignList;
-
+    vector<ASTVariableDeclType*> varList;
     ASTVariableDecl(string lit_type) : lit_type(lit_type) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTVariableDeclType : public ASTnode
+{
+    ASTVariable* var;
+    ASTVariableAssign* var_assign;
+
+public:
+    ASTVariableDeclType(ASTVariable* var, ASTVariableAssign* var_assign) : var(var), var_assign(var_assign) {}
 
     virtual void accept(ASTvisitor &v)
     {

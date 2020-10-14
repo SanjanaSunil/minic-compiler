@@ -17,8 +17,14 @@ variable: ID                                #varId
 varAssign: ID '=' expr      #variableAssign
          ;
 
-varDecl: TYPE (variable | varAssign) ((',' variable) | (',' varAssign))* ';'    #variableDecl
+varDecl: TYPE varDeclTypeA (varDeclTypeB)* ';'    #variableDecl
         ;
+
+varDeclTypeA: (variable | varAssign)              #variableDeclTypeA
+            ;
+
+varDeclTypeB: ((',' variable) | (',' varAssign))  #variableDeclTypeB
+            ;
 
 functionArgument: TYPE ID                   #funcArg
                 | TYPE ID '[' ']'           #funcArgArrOneD
