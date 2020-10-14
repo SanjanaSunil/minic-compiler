@@ -3,9 +3,6 @@ grammar Expr;
 prog: (varDecl | functionDecl)* 'func int main()' block + EOF
     ;
 
-functionDecl: 'func' (TYPE | 'void') ID '(' (functionArgument)? (',' functionArgument)* ')' block       #funcDecl
-            ;
-
 functionCall: ID '(' (expr)? (',' expr)* ')'        #funcCall
             ;
 

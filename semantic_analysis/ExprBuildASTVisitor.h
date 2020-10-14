@@ -15,17 +15,33 @@ public:
     {
         cout << "In visitProg" << endl;
         ASTProg *node = new ASTProg();
-        ASTStat *statementNode;
 
-        for (auto statement : context->statement())
+        ASTProgStat *progStatNode;
+        for (auto progStat : context->progStatement())
         {
-            statementNode = visit(statement);
-            if (statementNode != nullptr)
+            progStatNode = visit(progStat);
+            if (progStatNode != nullptr)
             {
-                node->statementList.push_back(statementNode);
+                node->progStatList.push_back(progStatNode);
             }
         }
+
         return (ASTProg *) node;
+    }
+
+    virtual antlrcpp::Any visitProgStat(ExprParser::ProgStatContext *context)
+    {
+        cout << "In visitProgStat" << endl;
+
+        ASTVariableDecl *var_decl = (ASTVariableDecl *) nullptr;
+        ASTFuncDecl *func_decl = (ASTFuncDecl *) nullptr;
+        
+        if(context->varDecl()) var_decl = visit(context->varDecl());
+        if(context->functionDecl()) func_decl = visit(context->functionDecl());
+
+        ASTProgStat *node = new ASTProgStat(var_decl, func_decl);
+
+        return (ASTProgStat *) node;
     }
 
     virtual antlrcpp::Any visitBlockStat(ExprParser::BlockStatContext *context)
@@ -141,6 +157,27 @@ public:
 
         ASTFuncArg *node = new ASTFuncArg(lit_type, id, 2);
         return (ASTFuncArg *) node;
+    }
+
+    virtual antlrcpp::Any visitFuncDecl(ExprParser::FuncDeclContext *context)
+    {
+        cout << "In visitFuncDecl" << endl;
+        string lit_type = context->functype->getText();
+        string id = context->ID()->getText();
+        ASTBlockStat *block = visit(context->block());
+
+        ASTFuncDecl *node = new ASTFuncDecl(lit_type, id, block);
+        ASTFuncArg *funcArgNode;
+        for (auto funcArg : context->functionArgument())
+        {
+            funcArgNode = visit(funcArg);
+            if (funcArgNode != nullptr)
+            {
+                node->funcArgList.push_back(funcArgNode);
+            }
+        }
+
+        return (ASTFuncDecl *) node;
     }
 
     virtual antlrcpp::Any visitExprVar(ExprParser::ExprVarContext *context)

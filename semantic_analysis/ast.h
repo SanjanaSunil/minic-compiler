@@ -4,6 +4,7 @@
 using namespace std;
 
 class ASTProg;
+class ASTProgStat;
 
 class ASTBlockStat;
 
@@ -12,6 +13,7 @@ class ASTVariableAssign;
 class ASTVariableDecl;
 
 class ASTFuncArg;
+class ASTFuncDecl;
 
 class ASTExpr;
 class ASTExprUnary;
@@ -33,11 +35,13 @@ class ASTvisitor
 {
 public:
     virtual void visit(ASTProg &node) = 0;
+    virtual void visit(ASTProgStat &node) = 0;
     virtual void visit(ASTBlockStat &node) = 0;
     virtual void visit(ASTVariable &node) = 0;
     virtual void visit(ASTVariableAssign &node) = 0;
     virtual void visit(ASTVariableDecl &node) = 0;
     virtual void visit(ASTFuncArg &node) = 0;
+    virtual void visit(ASTFuncDecl &node) = 0;
 
     virtual void visit(ASTExprUnary &node) = 0;
     virtual void visit(ASTExprBinary &node) = 0;
@@ -62,15 +66,28 @@ public:
     {
     }
 
-    //  virtual void printPostFix() const = 0;
-
     virtual void accept(ASTvisitor &V) = 0;
 };
 
 class ASTProg : public ASTnode
 {
 public:
-    std::vector<ASTStat *> statementList;
+    std::vector<ASTProgStat *> progStatList;
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTProgStat : public ASTnode
+{
+    ASTVariableDecl *var_decl;
+    ASTFuncDecl *func_decl;
+
+public:
+    ASTProgStat(ASTVariableDecl *_var_decl, ASTFuncDecl *_func_decl) : var_decl(_var_decl), func_decl(_func_decl) {}
+
     virtual void accept(ASTvisitor &v)
     {
         v.visit(*this);
@@ -142,6 +159,23 @@ class ASTFuncArg : public ASTnode
 
 public:
     ASTFuncArg(string lit_type, string id, int dimension) : lit_type(lit_type), id(id), dimension(dimension) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTFuncDecl : public ASTnode
+{
+    string lit_type;
+    string id;
+    ASTBlockStat* block;
+
+public:
+    vector<ASTFuncArg*> funcArgList;
+
+    ASTFuncDecl(string lit_type, string id, ASTBlockStat *_block) : lit_type(lit_type), id(id), block(_block) {}
 
     virtual void accept(ASTvisitor &v)
     {

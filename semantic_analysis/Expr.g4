@@ -1,7 +1,10 @@
 grammar Expr;
 
-prog: statement + EOF
+prog: progStatement* EOF
     ;
+
+progStatement: (varDecl | functionDecl)      #progStat
+             ;
 
 block: '{' (statement)* '}'     #blockStat
      ;
@@ -21,6 +24,9 @@ functionArgument: TYPE ID                   #funcArg
                 | TYPE ID '[' ']'           #funcArgArrOneD
                 | TYPE ID '[' ']' '[' ']'   #funcArgArrTwoD
                 ;
+
+functionDecl: 'func' functype=(TYPE | 'void') ID '(' (functionArgument)? (',' functionArgument)* ')' block       #funcDecl
+            ;
 
 expr: op=('+' | '-') expr                       #exprUnary
     | op='!' expr                               #exprNot
