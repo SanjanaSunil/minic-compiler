@@ -28,6 +28,23 @@ public:
         return (ASTProg *) node;
     }
 
+    virtual antlrcpp::Any visitBlockStat(ExprParser::BlockStatContext *context)
+    {
+        cout << "In visitBlockStat" << endl;
+        ASTBlockStat *node = new ASTBlockStat();
+        ASTStat *statementNode;
+
+        for (auto statement : context->statement())
+        {
+            statementNode = visit(statement);
+            if (statementNode != nullptr)
+            {
+                node->statementList.push_back(statementNode);
+            }
+        }
+        return (ASTBlockStat *) node;
+    }
+
     virtual antlrcpp::Any visitVarId(ExprParser::VarIdContext *context)
     {
         cout << "In visitVarId" << endl;
@@ -94,6 +111,36 @@ public:
         }
 
         return (ASTVariableDecl *) node;
+    }
+
+    virtual antlrcpp::Any visitFuncArg(ExprParser::FuncArgContext *context)
+    {
+        cout << "In visitFuncArg" << endl;
+        string lit_type = context->TYPE()->getText();
+        string id = context->ID()->getText();
+
+        ASTFuncArg *node = new ASTFuncArg(lit_type, id, 0);
+        return (ASTFuncArg *) node;
+    }
+
+    virtual antlrcpp::Any visitFuncArgArrOneD(ExprParser::FuncArgArrOneDContext *context)
+    {
+        cout << "In visitFuncArgArrOneD" << endl;
+        string lit_type = context->TYPE()->getText();
+        string id = context->ID()->getText();
+
+        ASTFuncArg *node = new ASTFuncArg(lit_type, id, 1);
+        return (ASTFuncArg *) node;
+    }
+
+    virtual antlrcpp::Any visitFuncArgArrTwoD(ExprParser::FuncArgArrTwoDContext *context)
+    {
+        cout << "In visitFuncArgArrTwoD" << endl;
+        string lit_type = context->TYPE()->getText();
+        string id = context->ID()->getText();
+
+        ASTFuncArg *node = new ASTFuncArg(lit_type, id, 2);
+        return (ASTFuncArg *) node;
     }
 
     virtual antlrcpp::Any visitExprVar(ExprParser::ExprVarContext *context)
@@ -269,6 +316,14 @@ public:
         cout << "In visitStatVarDecl" << endl;
         ASTVariableDecl *var_decl = visit(context->varDecl());
         ASTStatVarDecl *node = new ASTStatVarDecl(var_decl);
+        return (ASTStat *) node;
+    }
+
+    virtual antlrcpp::Any visitStatBlock(ExprParser::StatBlockContext *context)
+    {
+        cout << "In visitStatBlock" << endl;
+        ASTBlockStat *block = visit(context->block());
+        ASTStatBlock *node = new ASTStatBlock(block);
         return (ASTStat *) node;
     }
 };

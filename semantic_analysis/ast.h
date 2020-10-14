@@ -5,9 +5,13 @@ using namespace std;
 
 class ASTProg;
 
+class ASTBlockStat;
+
 class ASTVariable;
 class ASTVariableAssign;
 class ASTVariableDecl;
+
+class ASTFuncArg;
 
 class ASTExpr;
 class ASTExprUnary;
@@ -23,14 +27,17 @@ class ASTExprVar;
 class ASTStat;
 class ASTStatVarAssign;
 class ASTStatVarDecl;
+class ASTStatBlock;
 
 class ASTvisitor
 {
 public:
     virtual void visit(ASTProg &node) = 0;
+    virtual void visit(ASTBlockStat &node) = 0;
     virtual void visit(ASTVariable &node) = 0;
     virtual void visit(ASTVariableAssign &node) = 0;
     virtual void visit(ASTVariableDecl &node) = 0;
+    virtual void visit(ASTFuncArg &node) = 0;
 
     virtual void visit(ASTExprUnary &node) = 0;
     virtual void visit(ASTExprBinary &node) = 0;
@@ -61,6 +68,16 @@ public:
 };
 
 class ASTProg : public ASTnode
+{
+public:
+    std::vector<ASTStat *> statementList;
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTBlockStat : public ASTnode
 {
 public:
     std::vector<ASTStat *> statementList;
@@ -106,7 +123,7 @@ class ASTVariableDecl : public ASTnode
 public:
     vector<ASTVariable*> varList;
     vector<ASTVariableAssign*> varAssignList;
-    
+
     ASTVariableDecl(string lit_type) : lit_type(lit_type) {}
 
     virtual void accept(ASTvisitor &v)
@@ -114,6 +131,24 @@ public:
         v.visit(*this);
     }
 };
+
+// Func
+
+class ASTFuncArg : public ASTnode
+{
+    string lit_type;
+    string id;
+    int dimension;
+
+public:
+    ASTFuncArg(string lit_type, string id, int dimension) : lit_type(lit_type), id(id), dimension(dimension) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
 
 // Expr
 class ASTExpr : public ASTnode
@@ -277,6 +312,19 @@ class ASTStatVarDecl : public ASTStat
 
 public:
     ASTStatVarDecl(ASTVariableDecl *_var_decl) : var_decl(_var_decl) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTStatBlock : public ASTStat
+{
+    ASTBlockStat *block;
+
+public:
+    ASTStatBlock(ASTBlockStat *_block) : block(_block) {}
 
     virtual void accept(ASTvisitor &v)
     {

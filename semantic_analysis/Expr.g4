@@ -3,6 +3,9 @@ grammar Expr;
 prog: statement + EOF
     ;
 
+block: '{' (statement)* '}'     #blockStat
+     ;
+
 variable: ID                                #varId
         | ID '[' expr ']'                   #varArrOneD
         | ID '[' expr ']' '[' expr ']'      #varArrTwoD
@@ -13,6 +16,11 @@ varAssign: ID '=' expr      #variableAssign
 
 varDecl: TYPE (variable | varAssign) ((',' variable) | (',' varAssign))* ';'    #variableDecl
         ;
+
+functionArgument: TYPE ID                   #funcArg
+                | TYPE ID '[' ']'           #funcArgArrOneD
+                | TYPE ID '[' ']' '[' ']'   #funcArgArrTwoD
+                ;
 
 expr: op=('+' | '-') expr                       #exprUnary
     | op='!' expr                               #exprNot
@@ -34,6 +42,7 @@ expr: op=('+' | '-') expr                       #exprUnary
 
 statement: varDecl                          #statVarDecl
          | variable '=' expr ';'            #statVarAssign
+         | block                            #statBlock
          ;
 
 /*Tokens*/

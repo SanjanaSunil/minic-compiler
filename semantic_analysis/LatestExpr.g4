@@ -3,14 +3,6 @@ grammar Expr;
 prog: (varDecl | functionDecl)* 'func int main()' block + EOF
     ;
 
-block: '{' (statement)* '}'     #blockRule
-     ;
-
-functionArgument: TYPE ID                   #funcArg
-                | TYPE ID '[' ']'           #funcArgArrOneD
-                | TYPE ID '[' ']' '[' ']'   #funcArgArrTwoD
-                ;
-
 functionDecl: 'func' (TYPE | 'void') ID '(' (functionArgument)? (',' functionArgument)* ')' block       #funcDecl
             ;
 
@@ -20,9 +12,7 @@ functionCall: ID '(' (expr)? (',' expr)* ')'        #funcCall
 expr:  functionCall                         #exprFuncCall
     ;
         
-statement: varDecl                          #statVarDecl
-         | functionCall ';'                 #statFuncCall
-         | block                            #statBlock
+statement: functionCall ';'                 #statFuncCall
          | 'return' (expr)? ';'             #statReturn
          | 'break' ';'                      #statBreak
          | 'continue' ';'                   #statContinue
