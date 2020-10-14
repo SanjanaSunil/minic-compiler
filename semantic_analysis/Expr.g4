@@ -53,6 +53,7 @@ expr: op=('+' | '-') expr                       #exprUnary
 statement: varDecl                          #statVarDecl
          | variable '=' expr ';'            #statVarAssign
          | block                            #statBlock
+         | functionCall ';'                 #statFuncCall
          ;
 
 /*Tokens*/

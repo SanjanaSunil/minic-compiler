@@ -390,4 +390,12 @@ public:
         ASTStatBlock *node = new ASTStatBlock(block);
         return (ASTStat *) node;
     }
+
+    virtual antlrcpp::Any visitStatFuncCall(ExprParser::StatFuncCallContext *context)
+    {
+        cout << "In visitStatFuncCall" << endl;
+        ASTFuncCall *func_call = visit(context->functionCall());
+        ASTStatFuncCall *node = new ASTStatFuncCall(func_call);
+        return (ASTStat *) node;
+    }
 };
