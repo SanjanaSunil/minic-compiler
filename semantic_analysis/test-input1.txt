@@ -1,5 +1,8 @@
 func int main() {
-    break;
+    while(2 < 3)
+    {
+        x = 2;
+    }
     return 0;
 }
 

@@ -420,4 +420,13 @@ public:
         ASTStatLoopControl *node = new ASTStatLoopControl("continue");
         return (ASTStat *) node;
     }
+
+    virtual antlrcpp::Any visitStatWhile(ExprParser::StatWhileContext *context)
+    {
+        cout << "In visitStatWhile" << endl;
+        ASTExpr *exp = visit(context->expr());
+        ASTBlockStat *block = visit(context->block());
+        ASTStatWhile *node = new ASTStatWhile(exp, block);
+        return (ASTStat *) node;
+    }
 };
