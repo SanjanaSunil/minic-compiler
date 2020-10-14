@@ -28,6 +28,9 @@ functionArgument: TYPE ID                   #funcArg
 functionDecl: 'func' functype=(TYPE | 'void') ID '(' (functionArgument)? (',' functionArgument)* ')' block       #funcDecl
             ;
 
+functionCall: ID '(' (expr)? (',' expr)* ')'        #funcCall
+            ;
+
 expr: op=('+' | '-') expr                       #exprUnary
     | op='!' expr                               #exprNot
     | expr op=('/' | '*' | '%') expr            #exprDivMulMod
@@ -44,6 +47,7 @@ expr: op=('+' | '-') expr                       #exprUnary
     | STRING                                    #exprString
     | '(' expr ')'                              #exprParenthesis
     | variable                                  #exprVar
+    | functionCall                              #exprFuncCall
     ;
 
 statement: varDecl                          #statVarDecl

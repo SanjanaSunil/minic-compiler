@@ -1,1 +1,5 @@
-int x = 2, y, z;
+func int main() {
+    string x = "skdf";
+}
+
+int s = main();

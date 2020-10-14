@@ -35,7 +35,7 @@ public:
 
         ASTVariableDecl *var_decl = (ASTVariableDecl *) nullptr;
         ASTFuncDecl *func_decl = (ASTFuncDecl *) nullptr;
-        
+
         if(context->varDecl()) var_decl = visit(context->varDecl());
         if(context->functionDecl()) func_decl = visit(context->functionDecl());
 
@@ -178,6 +178,25 @@ public:
         }
 
         return (ASTFuncDecl *) node;
+    }
+
+    virtual antlrcpp::Any visitFuncCall(ExprParser::FuncCallContext *context)
+    {
+        cout << "In visitFuncCall" << endl;
+        string id = context->ID()->getText();
+        ASTFuncCall *node = new ASTFuncCall(id);
+
+        ASTExpr *funcArgNode;
+        for (auto funcArg : context->expr())
+        {
+            funcArgNode = visit(funcArg);
+            if (funcArgNode != nullptr)
+            {
+                node->funcArgList.push_back(funcArgNode);
+            }
+        }
+
+        return (ASTFuncCall *) node;
     }
 
     virtual antlrcpp::Any visitExprVar(ExprParser::ExprVarContext *context)
@@ -336,6 +355,14 @@ public:
     {
         cout << "In visitExprParenthesis" << endl;
         return visit(context->expr());
+    }
+
+    virtual antlrcpp::Any visitExprFuncCall(ExprParser::ExprFuncCallContext *context)
+    {
+        cout << "In visitExprFuncCall" << endl;
+        ASTFuncCall *func_call = visit(context->functionCall());
+        ASTExprFuncCall *node = new ASTExprFuncCall(func_call);
+        return (ASTExpr *) node;
     }
 
     virtual antlrcpp::Any visitStatVarAssign(ExprParser::StatVarAssignContext *context)

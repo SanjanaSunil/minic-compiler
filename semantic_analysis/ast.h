@@ -14,6 +14,7 @@ class ASTVariableDecl;
 
 class ASTFuncArg;
 class ASTFuncDecl;
+class ASTFuncCall;
 
 class ASTExpr;
 class ASTExprUnary;
@@ -25,6 +26,7 @@ class ASTExprChar;
 class ASTExprBool;
 class ASTExprString;
 class ASTExprVar;
+class ASTExprFuncCall;
 
 class ASTStat;
 class ASTStatVarAssign;
@@ -42,6 +44,7 @@ public:
     virtual void visit(ASTVariableDecl &node) = 0;
     virtual void visit(ASTFuncArg &node) = 0;
     virtual void visit(ASTFuncDecl &node) = 0;
+    virtual void visit(ASTFuncCall &node) = 0;
 
     virtual void visit(ASTExprUnary &node) = 0;
     virtual void visit(ASTExprBinary &node) = 0;
@@ -52,6 +55,7 @@ public:
     virtual void visit(ASTExprBool &node) = 0;
     virtual void visit(ASTExprString &node) = 0;
     virtual void visit(ASTExprVar &node) = 0;
+    virtual void visit(ASTExprFuncCall &node) = 0;
     virtual void visit(ASTExpr &node) = 0;
 
     virtual void visit(ASTStatVarDecl &node) = 0;
@@ -176,6 +180,20 @@ public:
     vector<ASTFuncArg*> funcArgList;
 
     ASTFuncDecl(string lit_type, string id, ASTBlockStat *_block) : lit_type(lit_type), id(id), block(_block) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTFuncCall : public ASTnode
+{
+    string id;
+
+public:
+    vector<ASTExpr*> funcArgList;
+    ASTFuncCall(string id) : id(id) {}
 
     virtual void accept(ASTvisitor &v)
     {
@@ -315,6 +333,20 @@ public:
         v.visit(*this);
     }
 };
+
+class ASTExprFuncCall : public ASTExpr
+{
+    ASTFuncCall *func_call;
+
+public:
+    ASTExprFuncCall(ASTFuncCall *_func_call) : func_call(_func_call) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
 
 // Stat
 class ASTStat : public ASTnode

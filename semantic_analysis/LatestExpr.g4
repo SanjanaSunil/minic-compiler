@@ -1,13 +1,8 @@
 grammar Expr;
 
-prog: (varDecl | functionDecl)* 'func int main()' block + EOF
-    ;
 
-functionCall: ID '(' (expr)? (',' expr)* ')'        #funcCall
+functionDecl: 'func' functype=(TYPE | 'void') ID '(' (functionArgument)? (',' functionArgument)* ')' block       #funcDecl
             ;
-
-expr:  functionCall                         #exprFuncCall
-    ;
         
 statement: functionCall ';'                 #statFuncCall
          | 'return' (expr)? ';'             #statReturn
