@@ -3,9 +3,6 @@ grammar Expr;
 prog: (varDecl | functionDecl)* 'func int main()' block + EOF
     ;
 
-varDecl: TYPE (variable | varAssign) ((',' variable) | (',' varAssign))* ';'    #varDeclRule
-        ;
-
 block: '{' (statement)* '}'     #blockRule
      ;
 
@@ -24,7 +21,6 @@ expr:  functionCall                         #exprFuncCall
     ;
         
 statement: varDecl                          #statVarDecl
-         | variable '=' expr ';'            #statVarAssign
          | functionCall ';'                 #statFuncCall
          | block                            #statBlock
          | 'return' (expr)? ';'             #statReturn

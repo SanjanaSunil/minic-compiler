@@ -67,6 +67,35 @@ public:
         return (ASTVariableAssign *) node;
     }
 
+    virtual antlrcpp::Any visitVariableDecl(ExprParser::VariableDeclContext *context)
+    {
+        cout << "In visitVariableDecl" << endl;
+        string lit_type = context->TYPE()->getText();
+        ASTVariableDecl *node = new ASTVariableDecl(lit_type);
+
+        ASTVariable *variableNode;
+        for (auto variable : context->variable())
+        {
+            variableNode = visit(variable);
+            if (variableNode != nullptr)
+            {
+                node->varList.push_back(variableNode);
+            }
+        }
+
+        ASTVariableAssign *varAssignNode;
+        for (auto varAssign : context->varAssign())
+        {
+            varAssignNode = visit(varAssign);
+            if (varAssignNode != nullptr)
+            {
+                node->varAssignList.push_back(varAssignNode);
+            }
+        }
+
+        return (ASTVariableDecl *) node;
+    }
+
     virtual antlrcpp::Any visitExprVar(ExprParser::ExprVarContext *context)
     {
         cout << "In visitExprVar" << endl;
@@ -232,6 +261,14 @@ public:
         ASTExpr *exp = visit(context->expr());
 
         ASTStatVarAssign *node = new ASTStatVarAssign(var, exp);
+        return (ASTStat *) node;
+    }
+
+    virtual antlrcpp::Any visitStatVarDecl(ExprParser::StatVarDeclContext *context)
+    {
+        cout << "In visitStatVarDecl" << endl;
+        ASTVariableDecl *var_decl = visit(context->varDecl());
+        ASTStatVarDecl *node = new ASTStatVarDecl(var_decl);
         return (ASTStat *) node;
     }
 };

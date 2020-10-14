@@ -11,6 +11,9 @@ variable: ID                                #varId
 varAssign: ID '=' expr      #variableAssign
          ;
 
+varDecl: TYPE (variable | varAssign) ((',' variable) | (',' varAssign))* ';'    #variableDecl
+        ;
+
 expr: op=('+' | '-') expr                       #exprUnary
     | op='!' expr                               #exprNot
     | expr op=('/' | '*' | '%') expr            #exprDivMulMod
@@ -29,7 +32,8 @@ expr: op=('+' | '-') expr                       #exprUnary
     | variable                                  #exprVar
     ;
 
-statement: variable '=' expr ';'            #statVarAssign
+statement: varDecl                          #statVarDecl
+         | variable '=' expr ';'            #statVarAssign
          ;
 
 /*Tokens*/

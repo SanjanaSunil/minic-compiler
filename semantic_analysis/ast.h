@@ -7,6 +7,7 @@ class ASTProg;
 
 class ASTVariable;
 class ASTVariableAssign;
+class ASTVariableDecl;
 
 class ASTExpr;
 class ASTExprUnary;
@@ -21,7 +22,7 @@ class ASTExprVar;
 
 class ASTStat;
 class ASTStatVarAssign;
-
+class ASTStatVarDecl;
 
 class ASTvisitor
 {
@@ -29,6 +30,7 @@ public:
     virtual void visit(ASTProg &node) = 0;
     virtual void visit(ASTVariable &node) = 0;
     virtual void visit(ASTVariableAssign &node) = 0;
+    virtual void visit(ASTVariableDecl &node) = 0;
 
     virtual void visit(ASTExprUnary &node) = 0;
     virtual void visit(ASTExprBinary &node) = 0;
@@ -41,6 +43,7 @@ public:
     virtual void visit(ASTExprVar &node) = 0;
     virtual void visit(ASTExpr &node) = 0;
 
+    virtual void visit(ASTStatVarDecl &node) = 0;
     virtual void visit(ASTStatVarAssign &node) = 0;
     virtual void visit(ASTStat &node) = 0;
 };
@@ -89,6 +92,22 @@ class ASTVariableAssign : public ASTnode
 
 public:
     ASTVariableAssign(string id, ASTExpr *_exp) : id(id), exp(_exp) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTVariableDecl : public ASTnode
+{
+    string lit_type;
+
+public:
+    vector<ASTVariable*> varList;
+    vector<ASTVariableAssign*> varAssignList;
+    
+    ASTVariableDecl(string lit_type) : lit_type(lit_type) {}
 
     virtual void accept(ASTvisitor &v)
     {
@@ -245,6 +264,19 @@ class ASTStatVarAssign : public ASTStat
 
 public:
     ASTStatVarAssign(ASTVariable *_var, ASTExpr *_exp) : var(_var), exp(_exp) {}
+
+    virtual void accept(ASTvisitor &v)
+    {
+        v.visit(*this);
+    }
+};
+
+class ASTStatVarDecl : public ASTStat
+{
+    ASTVariableDecl *var_decl;
+
+public:
+    ASTStatVarDecl(ASTVariableDecl *_var_decl) : var_decl(_var_decl) {}
 
     virtual void accept(ASTvisitor &v)
     {
