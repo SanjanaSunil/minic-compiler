@@ -58,6 +58,7 @@ statement: varDecl                          #statVarDecl
          | 'break' ';'                      #statBreak
          | 'continue' ';'                   #statContinue
          | 'while' '(' expr ')' block       #statWhile
+         | 'if' '(' expr ')' block ('elif' '(' expr ')' block)* ('else' block)?     #statIf
          ;
 
 /*Tokens*/

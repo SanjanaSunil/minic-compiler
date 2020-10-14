@@ -1,9 +1,10 @@
 func int main() {
-    while(2 < 3)
+    if(1)
     {
-        x = 2;
+        return 2;
     }
-    return 0;
+    elif(x < 3)
+    {
+        return 5;
+    }
 }
-
-int s = main();

@@ -429,4 +429,32 @@ public:
         ASTStatWhile *node = new ASTStatWhile(exp, block);
         return (ASTStat *) node;
     }
+
+    virtual antlrcpp::Any visitStatIf(ExprParser::StatIfContext *context)
+    {
+        cout << "In visitStatIf" << endl;
+        ASTStatIf *node = new ASTStatIf();
+
+        ASTExpr *exprNode;
+        for (auto expr : context->expr())
+        {
+            exprNode = visit(expr);
+            if (exprNode != nullptr)
+            {
+                node->exprList.push_back(exprNode);
+            }
+        }
+
+        ASTBlockStat *blockNode;
+        for (auto block : context->block())
+        {
+            blockNode = visit(block);
+            if (blockNode != nullptr)
+            {
+                node->blockList.push_back(blockNode);
+            }
+        }
+
+        return (ASTStat *) node;
+    }
 };
