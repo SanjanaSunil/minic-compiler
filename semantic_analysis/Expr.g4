@@ -3,20 +3,27 @@ grammar Expr;
 prog: expr + EOF
     ;
 
+variable: ID                                #varId
+        | ID '[' expr ']'                   #varArrOneD
+        | ID '[' expr ']' '[' expr ']'      #varArrTwoD
+        ;
+
 expr: op=('+' | '-') expr                       #exprUnary
-    | op='!' expr                                  #exprNot
+    | op='!' expr                               #exprNot
     | expr op=('/' | '*' | '%') expr            #exprDivMulMod
     | expr op=('+' | '-') expr                  #exprAddSub
     | expr op=('<' | '<=' | '>' | '>=') expr    #exprComp
     | expr op=('==' | '!=') expr                #exprEq
     | expr op='&&' expr                         #exprAnd
     | expr op='||' expr                         #exprOr
+    | expr '?' expr ':' expr                    #exprTernary
     | INT                                       #exprInt
     | FLOAT                                     #exprFloat
     | CHAR                                      #exprChar
     | BOOL                                      #exprBool
     | STRING                                    #exprString
     | '(' expr ')'                              #exprParenthesis
+    | variable                                  #exprVar
     ;
 
 /*Tokens*/

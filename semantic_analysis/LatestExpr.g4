@@ -3,11 +3,6 @@ grammar Expr;
 prog: (varDecl | functionDecl)* 'func int main()' block + EOF
     ;
 
-variable: ID                                #varId
-        | ID '[' expr ']'                   #varArrOneD
-        | ID '[' expr ']' '[' expr ']'      #varArrTwoD
-        ;
-
 varAssign: ID '=' expr      #varAssignRule
          ;
 
@@ -29,8 +24,6 @@ functionCall: ID '(' (expr)? (',' expr)* ')'        #funcCall
             ;
 
 expr:  functionCall                         #exprFuncCall
-    | '(' expr ')' '?' expr ':' expr        #exprTernary
-    | variable                              #exprVar
     ;
         
 statement: varDecl                          #statVarDecl

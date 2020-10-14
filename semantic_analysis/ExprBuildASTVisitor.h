@@ -28,6 +28,43 @@ public:
         return (ASTProg *) node;
     }
 
+    virtual antlrcpp::Any visitVarId(ExprParser::VarIdContext *context)
+    {
+        cout << "In visitVarId" << endl;
+        string id = context->ID()->getText();
+        ASTVariable *node = new ASTVariable(id, (ASTExpr *) nullptr, (ASTExpr *) nullptr);
+        return (ASTVariable *) node;
+    }
+
+    virtual antlrcpp::Any visitVarArrOneD(ExprParser::VarArrOneDContext *context)
+    {
+        cout << "In visitVarArrOneD" << endl;
+        string id = context->ID()->getText();
+        ASTExpr* param = visit(context->expr());
+
+        ASTVariable *node = new ASTVariable(id, param, (ASTExpr *) nullptr);
+        return (ASTVariable *) node;
+    }
+
+    virtual antlrcpp::Any visitVarArrTwoD(ExprParser::VarArrTwoDContext *context)
+    {
+        cout << "In visitVarArrTwoD" << endl;
+        string id = context->ID()->getText();
+        ASTExpr* param1 = visit(context->expr(0));
+        ASTExpr* param2 = visit(context->expr(1));
+
+        ASTVariable *node = new ASTVariable(id, param1, param2);
+        return (ASTVariable *) node;
+    }
+
+    virtual antlrcpp::Any visitExprVar(ExprParser::ExprVarContext *context)
+    {
+        cout << "In visitExprVar" << endl;
+        ASTVariable *var = visit(context->variable());
+        ASTExprVar *node = new ASTExprVar(var);
+        return (ASTExpr *) node;
+    }
+
     virtual antlrcpp::Any visitExprUnary(ExprParser::ExprUnaryContext *context)
     {
         cout << "In visitExprUnary" << endl;
@@ -117,6 +154,18 @@ public:
         ASTExpr *right = visit(context->expr(1));
 
         ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        return (ASTExpr *) node;
+    }
+
+    virtual antlrcpp::Any visitExprTernary(ExprParser::ExprTernaryContext *context)
+    {
+        cout << "In visitExprTernary" << endl;
+
+        ASTExpr *first_node = visit(context->expr(0));
+        ASTExpr *second_node = visit(context->expr(1));
+        ASTExpr *third_node = visit(context->expr(2));
+
+        ASTExprTernary *node = new ASTExprTernary(first_node, second_node, third_node);
         return (ASTExpr *) node;
     }
 
