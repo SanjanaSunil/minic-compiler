@@ -470,7 +470,7 @@ public:
         if(context->expr()) exp = visit(context->expr());
 
         ASTStatReturn *node = new ASTStatReturn(exp);
-        node->node_type = NONE;
+        if(context->expr()) node->node_type = exp->node_type;
         return (ASTStat *) node;
     }
 
@@ -537,21 +537,24 @@ public:
         ASTVariableDecl *var_decl = (ASTVariableDecl *) nullptr;
         if(context->varDecl()) var_decl = visit(context->varDecl());
 
-        ASTVariableAssign *var_assign = (ASTVariableAssign *) nullptr;
-        if(context->varAssign()) var_assign = visit(context->varAssign());
+        ASTVariable *init_var = (ASTVariable *) nullptr;
+        if(context->initvar) init_var = visit(context->initvar);
+
+        ASTExpr *init_expr = (ASTExpr *) nullptr;
+        if(context->initexpr) init_expr =  visit(context->initexpr);
 
         ASTExpr *cond_expr = (ASTExpr *) nullptr;
         if(context->condexpr) cond_expr =  visit(context->condexpr);
 
-        ASTVariable *var = (ASTVariable *) nullptr;
-        if(context->variable()) var = visit(context->variable());
+        ASTVariable *loop_var = (ASTVariable *) nullptr;
+        if(context->loopvar) loop_var = visit(context->loopvar);
 
         ASTExpr *loop_expr = (ASTExpr *) nullptr;
         if(context->loopexpr) loop_expr = visit(context->loopexpr);
 
-        ASTBlockStat *block = visit(context->block());
+        ASTBlockStat *loopblock = visit(context->block());
 
-        ASTStatFor *node = new ASTStatFor(var_decl, var_assign, cond_expr, var, loop_expr, block);
+        ASTStatFor *node = new ASTStatFor(var_decl, init_var, init_expr, cond_expr, loop_var, loop_expr, loopblock);
         node->node_type = NONE;
         return (ASTStat *) node;
     }

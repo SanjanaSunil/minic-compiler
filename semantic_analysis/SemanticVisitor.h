@@ -51,6 +51,7 @@ public:
     virtual void visit(ASTVariableAssign &node)
     {
         (node.exp)->accept(*this);
+        node.node_type = (node.exp)->node_type;
     }
 
     // Check if each in vector is either of type none or specified type
@@ -68,7 +69,11 @@ public:
     virtual void visit(ASTVariableDeclType &node)
     {
         if(node.var) (node.var)->accept(*this);
-        if(node.var_assign) (node.var_assign)->accept(*this);
+        if(node.var_assign) 
+        {
+            (node.var_assign)->accept(*this);
+            node.node_type = (node.var_assign)->node_type;
+        }
     }
 
     // Add to symbol table along with dimension
@@ -92,6 +97,7 @@ public:
         }
     }
 
+    // Assign type to whatever type the variable is
     virtual void visit(ASTExpr &node)
     {
         return;
@@ -137,4 +143,82 @@ public:
         if((node.second)->node_type != (node.third)->node_type)
             error("Incompatible ternary returns");
     }
+
+    // Set node type acc to symbol table
+    virtual void visit(ASTExprVar &node)
+    {
+        return;
+    }
+
+    // Set node type acc to symbol table
+    virtual void visit(ASTExprFuncCall &node)
+    {
+        (node.func_call)->accept(*this);
+        node.node_type = (node.func_call)->node_type;
+    }
+
+    // Check if can be assigned properly
+    virtual void visit(ASTStatVarAssign &node)
+    {
+        (node.exp)->accept(*this);
+        node.node_type = (node.exp)->node_type;
+    }
+
+    virtual void visit(ASTStatVarDecl &node)
+    {
+        (node.var_decl)->accept(*this);
+        node.node_type = (node.var_decl)->node_type;
+    }
+
+    // Create new scope
+    virtual void visit(ASTStatBlock &node)
+    {
+        (node.block)->accept(*this);
+    }
+
+    // Nothing to do here since it will already check
+    virtual void visit(ASTStatFuncCall &node)
+    {
+        (node.func_call)->accept(*this);
+    }
+
+    // Check if currect return type, if in function
+    virtual void visit(ASTStatReturn &node)
+    {
+        if(node.return_expr) 
+        {
+            (node.return_expr)->accept(*this);
+            node.node_type = (node.return_expr)->node_type;
+        }
+    }
+
+    // Check if in loop or function
+    virtual void visit(ASTStatLoopControl &node)
+    {
+        return;
+    }
+
+    virtual void visit(ASTStatWhile &node)
+    {
+        (node.exp)->accept(*this);
+        if((node.exp)->node_type != INT && (node.exp)->node_type != BOOL)
+            error("Invalid loop condition");
+
+        (node.block)->accept(*this);
+    }
+
+    virtual void visit(ASTStatIf &node)
+    {
+        for(auto exp : node.exprList)
+        {
+            exp->accept(*this);
+            if(exp->node_type != INT && exp->node_type != BOOL)
+                error("Invalid if condition");
+        }
+
+        for(auto block : node.blockList) block->accept(*this);
+    }
+
+
+    
 };

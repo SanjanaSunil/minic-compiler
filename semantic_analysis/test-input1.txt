@@ -1,1 +1,6 @@
-int x = (2 < true);
+func int main() {
+    if(1) 
+    {
+        x = 1;
+    }
+}

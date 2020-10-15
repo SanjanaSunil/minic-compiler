@@ -3,10 +3,10 @@
 
 using namespace std;
 
-enum NodeType{INT, FLOAT, CHAR, BOOL, STRING, NONE};
+enum NodeType{NONE, INT, FLOAT, CHAR, BOOL, STRING};
 
 NodeType getNodeType(string lit_type) {
-    if(lit_type == "int") return INT;
+    if(lit_type == "int" || lit_type == "uint" || lit_type == "long") return INT;
     else if(lit_type == "float") return FLOAT;
     else if(lit_type == "char") return CHAR;
     else if(lit_type == "bool") return BOOL;
@@ -506,13 +506,15 @@ class ASTStatFor : public ASTStat
 {
 public:
     ASTVariableDecl *var_decl;
-    ASTVariableAssign *var_assign;
+    ASTVariable *init_var;
+    ASTExpr *init_expr;
     ASTExpr *cond_expr;
-    ASTVariable *var;
+    ASTVariable *loop_var;
     ASTExpr *loop_expr;
     ASTBlockStat *block;
 
-    ASTStatFor(ASTVariableDecl *var_decl, ASTVariableAssign *var_assign, ASTExpr *cond_expr, ASTVariable *var, ASTExpr *loop_expr, ASTBlockStat *block) : var_decl(var_decl), var_assign(var_assign), cond_expr(cond_expr), var(var), loop_expr(loop_expr), block(block) {}
+    ASTStatFor(ASTVariableDecl *var_decl, ASTVariable *init_var, ASTExpr *init_expr, ASTExpr *cond_expr, ASTVariable *loop_var, ASTExpr *loop_expr, ASTBlockStat *block) 
+        : var_decl(var_decl), init_var(init_var), init_expr(init_expr), cond_expr(cond_expr), loop_var(loop_var), loop_expr(loop_expr), block(block) {}
 
     virtual void accept(ASTvisitor &v)
     {
