@@ -71,4 +71,62 @@ public:
         if(node.var_assign) (node.var_assign)->accept(*this);
     }
 
+    // Add to symbol table along with dimension
+    virtual void visit(ASTFuncArg &node)
+    {
+        return;
+    }
+
+    // Add to symbol table
+    virtual void visit(ASTFuncDecl &node)
+    {
+        (node.block)->accept(*this);
+    }
+
+    // Check symbol table, check if arguments are correct in number and type
+    virtual void visit(ASTFuncCall &node)
+    {
+        for(auto exp : node.funcArgList)
+        {
+            exp->accept(*this);
+        }
+    }
+
+    virtual void visit(ASTExpr &node)
+    {
+        return;
+    }
+
+    virtual void visit(ASTExprUnary &node)
+    {
+        (node.exp)->accept(*this);
+        if(node.unary_op == "+" || node.unary_op == "-")
+        {
+            if((node.exp)->node_type != INT)
+                error("Invalid unary operation");
+        }
+        else if(node.unary_op == "!")
+        {
+            if((node.exp)->node_type != BOOL)
+                error("Invalid unary operation");
+        }
+    }
+
+    virtual void visit(ASTExprBinary &node)
+    {
+        (node.left)->accept(*this);
+        (node.right)->accept(*this);
+
+        string bin_op = node.bin_operator;
+        if(bin_op == "+" || bin_op == "-" || bin_op == "/" || bin_op == "*" || bin_op == "%")
+        {
+            if((node.left)->node_type != INT || (node.right)->node_type != INT)
+                error("Invalid binary operation");
+        }
+        else 
+        {
+            if((node.left)->node_type != BOOL || (node.right)->node_type != BOOL)
+                error("Invalid binary operation");
+        }
+    }
 };

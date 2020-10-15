@@ -1,1 +1,1 @@
-int x[true];
+bool x = 2 + 3;
