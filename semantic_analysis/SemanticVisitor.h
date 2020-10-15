@@ -2,11 +2,6 @@
 #include <iostream>
 using namespace std;
 
-void error(string message) {
-    cerr << "ERROR: " << message << endl;
-    exit(1);
-}
-
 class SemanticVisitor : public ASTvisitor
 {
 public:
