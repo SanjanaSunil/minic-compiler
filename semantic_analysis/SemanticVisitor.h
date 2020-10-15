@@ -219,6 +219,19 @@ public:
         for(auto block : node.blockList) block->accept(*this);
     }
 
+    virtual void visit(ASTStatFor &node) {
+        if(node.var_decl) (node.var_decl)->accept(*this);
+        if(node.init_var) (node.init_var)->accept(*this);
+        if(node.init_expr) (node.init_expr)->accept(*this);
 
+        if(node.cond_expr) (node.cond_expr)->accept(*this);
+        if((node.cond_expr)->node_type != BOOL && (node.cond_expr)->node_type != INT)
+            error("Invalid for loop");
+
+        if(node.loop_var) (node.loop_var)->accept(*this);
+        if(node.loop_expr) (node.loop_expr)->accept(*this);
+        
+        if(node.block) (node.block)->accept(*this);
+    }
     
 };
