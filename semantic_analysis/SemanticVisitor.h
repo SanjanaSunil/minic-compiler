@@ -1,12 +1,20 @@
 //#include "ast.h"
 #include <iostream>
+#include "SymbolTable.h"
 using namespace std;
 
 class SemanticVisitor : public ASTvisitor
 {
+    SymbolTable *symbol_table;
+
 public:
+    SemanticVisitor() {
+        symbol_table = new SymbolTable();
+    }
+
     virtual void visit(ASTProg &node)
     {
+        symbol_table->addBlockScope();
         for (auto progStat : node.progStatList)
             progStat->accept(*this);
     }
@@ -80,6 +88,11 @@ public:
     // Add to symbol table
     virtual void visit(ASTFuncDecl &node)
     {
+        vector<string> args;
+        for(auto funcArg : node.funcArgList) args.push_back(funcArg->id);
+        symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args);
+
+        for(auto funcArg : node.funcArgList) funcArg->accept(*this);
         (node.block)->accept(*this);
     }
 

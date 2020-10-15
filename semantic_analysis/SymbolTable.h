@@ -2,7 +2,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "utilities.h"
 
 using namespace std;
 
@@ -65,10 +64,6 @@ class SymbolTable
 {
 public:
     vector<Scope*> scopes;
-
-    SymbolTable() {
-        addBlockScope(); // add global scope
-    }
 
     void addBlockScope() {
         Scope *block_scope = new Scope(Block, NONE);

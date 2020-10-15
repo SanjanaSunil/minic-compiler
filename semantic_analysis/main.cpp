@@ -4,6 +4,7 @@
 #include "ExprLexer.cpp"
 #include "ExprParser.cpp"
 
+#include "utilities.h"
 #include "ExprBuildASTVisitor.h"
 
 #include "SemanticVisitor.h"
