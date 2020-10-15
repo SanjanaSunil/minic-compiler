@@ -3,7 +3,7 @@
 using namespace std;
 
 void error(string message) {
-    cerr << message;
+    cerr << "ERROR: " << message << endl;
     exit(1);
 }
 
@@ -17,6 +17,7 @@ public:
     }
 
     // Add to symbol table
+    // Change None type
     virtual void visit(ASTProgStat &node)
     {
         if(node.var_decl) (node.var_decl)->accept(*this);
@@ -56,9 +57,12 @@ public:
     // Add to symbol table
     virtual void visit(ASTVariableDecl &node)
     {
-        for(auto var : node.varList)
-            var->accept(*this);
-
+        for(auto varDecl : node.varList)
+        {
+            varDecl->accept(*this);
+            if(varDecl->var_assign && node.node_type != varDecl->var_assign->node_type)
+                error("Invalid assignment");
+        }
     }
 
     virtual void visit(ASTVariableDeclType &node)
