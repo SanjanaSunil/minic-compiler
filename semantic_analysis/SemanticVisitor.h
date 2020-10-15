@@ -102,12 +102,12 @@ public:
         (node.exp)->accept(*this);
         if(node.unary_op == "+" || node.unary_op == "-")
         {
-            if((node.exp)->node_type != INT)
+            if((node.exp)->node_type == CHAR || (node.exp)->node_type == STRING)
                 error("Invalid unary operation");
         }
         else if(node.unary_op == "!")
         {
-            if((node.exp)->node_type != BOOL)
+            if((node.exp)->node_type != BOOL && (node.exp)->node_type != INT)
                 error("Invalid unary operation");
         }
     }
@@ -118,15 +118,23 @@ public:
         (node.right)->accept(*this);
 
         string bin_op = node.bin_operator;
-        if(bin_op == "+" || bin_op == "-" || bin_op == "/" || bin_op == "*" || bin_op == "%")
-        {
-            if((node.left)->node_type != INT || (node.right)->node_type != INT)
-                error("Invalid binary operation");
-        }
-        else 
-        {
-            if((node.left)->node_type != BOOL || (node.right)->node_type != BOOL)
-                error("Invalid binary operation");
-        }
+        NodeType left_type = (node.left)->node_type;
+        NodeType right_type = (node.right)->node_type;
+
+        if(left_type == CHAR || left_type == STRING || right_type == CHAR || right_type == STRING)
+            error("Invalid binary operation");
+    }
+
+    virtual void visit(ASTExprTernary &node)
+    {
+        (node.first)->accept(*this);
+        (node.second)->accept(*this);
+        (node.third)->accept(*this);
+
+        if((node.first)->node_type != BOOL && (node.first)->node_type != INT) 
+            error("Invalid ternary condition");
+        
+        if((node.second)->node_type != (node.third)->node_type)
+            error("Incompatible ternary returns");
     }
 };

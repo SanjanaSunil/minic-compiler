@@ -359,7 +359,7 @@ public:
         ASTExpr *third_node = visit(context->expr(2));
 
         ASTExprTernary *node = new ASTExprTernary(first_node, second_node, third_node);
-        node->node_type = NONE;
+        node->node_type = second_node->node_type;
         return (ASTExpr *) node;
     }
 
