@@ -6,7 +6,7 @@
 
 #include "ExprBuildASTVisitor.h"
 
-// #include "PostfixVisitor.h"
+#include "SemanticVisitor.h"
 //#include "ast.h"
 
 using namespace std;
@@ -30,8 +30,8 @@ int main(int argc, const char* argv[]) {
 
     ASTProg *program_root = visitor->visitProg(ctx);
     
-    // PostFixVisitor *pv = new PostFixVisitor();
-    // pv->visit(*program_root);
+    SemanticVisitor *sv = new SemanticVisitor();
+    sv->visit(*program_root);
 
     return 0;
 }

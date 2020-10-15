@@ -3,6 +3,18 @@
 
 using namespace std;
 
+enum NodeType{INT, FLOAT, CHAR, BOOL, STRING, NONE};
+
+NodeType getNodeType(string lit_type) {
+    if(lit_type == "int") return INT;
+    else if(lit_type == "float") return FLOAT;
+    else if(lit_type == "char") return CHAR;
+    else if(lit_type == "bool") return BOOL;
+    else if(lit_type == "string") return STRING;
+    return NONE;
+}
+
+
 class ASTProg;
 class ASTProgStat;
 
@@ -45,41 +57,42 @@ class ASTvisitor
 public:
     virtual void visit(ASTProg &node) = 0;
     virtual void visit(ASTProgStat &node) = 0;
-    virtual void visit(ASTBlockStat &node) = 0;
-    virtual void visit(ASTVariable &node) = 0;
-    virtual void visit(ASTVariableAssign &node) = 0;
-    virtual void visit(ASTVariableDecl &node) = 0;
-    virtual void visit(ASTVariableDeclType &node) = 0;
-    virtual void visit(ASTFuncArg &node) = 0;
-    virtual void visit(ASTFuncDecl &node) = 0;
-    virtual void visit(ASTFuncCall &node) = 0;
+    virtual void visit(ASTBlockStat &node) {};
+    virtual void visit(ASTVariable &node) {};
+    virtual void visit(ASTVariableAssign &node) {};
+    virtual void visit(ASTVariableDecl &node) {};
+    virtual void visit(ASTVariableDeclType &node) {};
+    virtual void visit(ASTFuncArg &node) {};
+    virtual void visit(ASTFuncDecl &node) {};
+    virtual void visit(ASTFuncCall &node) {};
 
-    virtual void visit(ASTExprUnary &node) = 0;
-    virtual void visit(ASTExprBinary &node) = 0;
-    virtual void visit(ASTExprTernary &node) = 0;
-    virtual void visit(ASTExprInt &node) = 0;
-    virtual void visit(ASTExprFloat &node) = 0;
-    virtual void visit(ASTExprChar &node) = 0;
-    virtual void visit(ASTExprBool &node) = 0;
-    virtual void visit(ASTExprString &node) = 0;
-    virtual void visit(ASTExprVar &node) = 0;
-    virtual void visit(ASTExprFuncCall &node) = 0;
-    virtual void visit(ASTExpr &node) = 0;
+    virtual void visit(ASTExprUnary &node) {};
+    virtual void visit(ASTExprBinary &node) {};
+    virtual void visit(ASTExprTernary &node) {};
+    virtual void visit(ASTExprInt &node) {};
+    virtual void visit(ASTExprFloat &node) {};
+    virtual void visit(ASTExprChar &node) {};
+    virtual void visit(ASTExprBool &node) {};
+    virtual void visit(ASTExprString &node) {};
+    virtual void visit(ASTExprVar &node) {};
+    virtual void visit(ASTExprFuncCall &node) {};
+    virtual void visit(ASTExpr &node) {};
 
-    virtual void visit(ASTStatFor &node) = 0;
-    virtual void visit(ASTStatIf &node) = 0;
-    virtual void visit(ASTStatWhile &node) = 0;
-    virtual void visit(ASTStatLoopControl &node) = 0;
-    virtual void visit(ASTStatReturn &node) = 0;
-    virtual void visit(ASTStatFuncCall &node) = 0;
-    virtual void visit(ASTStatVarDecl &node) = 0;
-    virtual void visit(ASTStatVarAssign &node) = 0;
-    virtual void visit(ASTStat &node) = 0;
+    virtual void visit(ASTStatFor &node) {};
+    virtual void visit(ASTStatIf &node) {};
+    virtual void visit(ASTStatWhile &node) {};
+    virtual void visit(ASTStatLoopControl &node) {};
+    virtual void visit(ASTStatReturn &node) {};
+    virtual void visit(ASTStatFuncCall &node) {};
+    virtual void visit(ASTStatVarDecl &node) {};
+    virtual void visit(ASTStatVarAssign &node) {};
+    virtual void visit(ASTStat &node) {};
 };
 
 class ASTnode
 {
 public:
+    NodeType node_type;
     virtual ~ASTnode()
     {
     }
@@ -100,10 +113,10 @@ public:
 
 class ASTProgStat : public ASTnode
 {
+public:
     ASTVariableDecl *var_decl;
     ASTFuncDecl *func_decl;
 
-public:
     ASTProgStat(ASTVariableDecl *_var_decl, ASTFuncDecl *_func_decl) : var_decl(_var_decl), func_decl(_func_decl) {}
 
     virtual void accept(ASTvisitor &v)
@@ -124,11 +137,11 @@ public:
 
 class ASTVariable : public ASTnode
 {
+public:
     string id;
     ASTExpr *param1;
     ASTExpr *param2;
 
-public:
     ASTVariable(string id, ASTExpr *_param1, ASTExpr *_param2) : id(id), param1(_param1), param2(_param2) {}
 
     virtual void accept(ASTvisitor &v)
@@ -139,10 +152,10 @@ public:
 
 class ASTVariableAssign : public ASTnode
 {
+public:
     string id;
     ASTExpr *exp;
 
-public:
     ASTVariableAssign(string id, ASTExpr *_exp) : id(id), exp(_exp) {}
 
     virtual void accept(ASTvisitor &v)
@@ -153,9 +166,9 @@ public:
 
 class ASTVariableDecl : public ASTnode
 {
+public:
     string lit_type;
 
-public:
     vector<ASTVariableDeclType*> varList;
     ASTVariableDecl(string lit_type) : lit_type(lit_type) {}
 
@@ -167,10 +180,10 @@ public:
 
 class ASTVariableDeclType : public ASTnode
 {
+public:
     ASTVariable* var;
     ASTVariableAssign* var_assign;
 
-public:
     ASTVariableDeclType(ASTVariable* var, ASTVariableAssign* var_assign) : var(var), var_assign(var_assign) {}
 
     virtual void accept(ASTvisitor &v)
@@ -183,11 +196,11 @@ public:
 
 class ASTFuncArg : public ASTnode
 {
+public:
     string lit_type;
     string id;
     int dimension;
 
-public:
     ASTFuncArg(string lit_type, string id, int dimension) : lit_type(lit_type), id(id), dimension(dimension) {}
 
     virtual void accept(ASTvisitor &v)
@@ -198,11 +211,11 @@ public:
 
 class ASTFuncDecl : public ASTnode
 {
+public:
     string lit_type;
     string id;
     ASTBlockStat* block;
 
-public:
     vector<ASTFuncArg*> funcArgList;
 
     ASTFuncDecl(string lit_type, string id, ASTBlockStat *_block) : lit_type(lit_type), id(id), block(_block) {}
@@ -215,9 +228,9 @@ public:
 
 class ASTFuncCall : public ASTnode
 {
+public:
     string id;
 
-public:
     vector<ASTExpr*> funcArgList;
     ASTFuncCall(string id) : id(id) {}
 
@@ -240,10 +253,10 @@ public:
 
 class ASTExprUnary : public ASTExpr
 {
+public:
     string unary_op;
     ASTExpr *exp;
 
-public:
     ASTExprUnary(string unary_op, ASTExpr *_exp) : unary_op(unary_op), exp(_exp) {}
 
     virtual void accept(ASTvisitor &v)
@@ -254,11 +267,11 @@ public:
 
 class ASTExprBinary : public ASTExpr
 {
+public:
     string bin_operator;
     ASTExpr *left;
     ASTExpr *right;
 
-public:
     ASTExprBinary(std::string op, ASTExpr *_left, ASTExpr *_right) : bin_operator(op), left(_left), right(_right) {}
 
     virtual void accept(ASTvisitor &v)
@@ -269,11 +282,11 @@ public:
 
 class ASTExprTernary : public ASTExpr
 {
+public:
     ASTExpr *first;
     ASTExpr *second;
     ASTExpr *third;
 
-public:
     ASTExprTernary(ASTExpr *_first, ASTExpr *_second, ASTExpr *_third) : first(_first), second(_second), third(_third) {}
 
     virtual void accept(ASTvisitor &v)
@@ -284,9 +297,9 @@ public:
 
 class ASTExprInt : public ASTExpr
 {
+public:
     int intlit;
 
-public:
     ASTExprInt(int intlit) : intlit(intlit) {}
 
     virtual void accept(ASTvisitor &v)
@@ -297,9 +310,9 @@ public:
 
 class ASTExprFloat : public ASTExpr
 {
+public:
     float floatlit;
 
-public:
     ASTExprFloat(float floatlit) : floatlit(floatlit) {}
 
     virtual void accept(ASTvisitor &v)
@@ -310,9 +323,9 @@ public:
 
 class ASTExprChar : public ASTExpr
 {
+public:
     char charlit;
 
-public:
     ASTExprChar(char charlit) : charlit(charlit) {}
 
     virtual void accept(ASTvisitor &v)
@@ -323,9 +336,9 @@ public:
 
 class ASTExprBool : public ASTExpr
 {
+public:
     bool boollit;
 
-public:
     ASTExprBool(bool boollit) : boollit(boollit) {}
 
     virtual void accept(ASTvisitor &v)
@@ -336,9 +349,9 @@ public:
 
 class ASTExprString : public ASTExpr
 {
+public:
     string stringlit;
 
-public:
     ASTExprString(string stringlit) : stringlit(stringlit) {}
 
     virtual void accept(ASTvisitor &v)
@@ -349,9 +362,9 @@ public:
 
 class ASTExprVar : public ASTExpr
 {
+public:
     ASTVariable *var;
 
-public:
     ASTExprVar(ASTVariable *var) : var(var) {}
 
     virtual void accept(ASTvisitor &v)
@@ -362,9 +375,9 @@ public:
 
 class ASTExprFuncCall : public ASTExpr
 {
+public:
     ASTFuncCall *func_call;
 
-public:
     ASTExprFuncCall(ASTFuncCall *_func_call) : func_call(_func_call) {}
 
     virtual void accept(ASTvisitor &v)
@@ -386,10 +399,10 @@ public:
 
 class ASTStatVarAssign : public ASTStat
 {
+public:
     ASTVariable *var;
     ASTExpr *exp;
 
-public:
     ASTStatVarAssign(ASTVariable *_var, ASTExpr *_exp) : var(_var), exp(_exp) {}
 
     virtual void accept(ASTvisitor &v)
@@ -400,9 +413,9 @@ public:
 
 class ASTStatVarDecl : public ASTStat
 {
+public:
     ASTVariableDecl *var_decl;
 
-public:
     ASTStatVarDecl(ASTVariableDecl *_var_decl) : var_decl(_var_decl) {}
 
     virtual void accept(ASTvisitor &v)
@@ -413,9 +426,9 @@ public:
 
 class ASTStatBlock : public ASTStat
 {
+public:
     ASTBlockStat *block;
 
-public:
     ASTStatBlock(ASTBlockStat *_block) : block(_block) {}
 
     virtual void accept(ASTvisitor &v)
@@ -426,9 +439,9 @@ public:
 
 class ASTStatFuncCall : public ASTStat
 {
+public:
     ASTFuncCall *func_call;
 
-public:
     ASTStatFuncCall(ASTFuncCall *_func_call) : func_call(_func_call) {}
 
     virtual void accept(ASTvisitor &v)
@@ -439,9 +452,9 @@ public:
 
 class ASTStatReturn : public ASTStat
 {
+public:
     ASTExpr *return_expr;
 
-public:
     ASTStatReturn(ASTExpr *_return_expr) : return_expr(_return_expr) {}
 
     virtual void accept(ASTvisitor &v)
@@ -452,9 +465,9 @@ public:
 
 class ASTStatLoopControl: public ASTStat
 {
+public:
     string control_stat;
 
-public:
     ASTStatLoopControl(string control_stat) : control_stat(control_stat) {}
 
     virtual void accept(ASTvisitor &v)
@@ -465,10 +478,10 @@ public:
 
 class ASTStatWhile : public ASTStat
 {
+public:
     ASTExpr *exp;
     ASTBlockStat *block;
 
-public:
     ASTStatWhile(ASTExpr *_exp, ASTBlockStat *_block) : exp(_exp), block(_block) {}
 
     virtual void accept(ASTvisitor &v)
@@ -491,6 +504,7 @@ public:
 
 class ASTStatFor : public ASTStat
 {
+public:
     ASTVariableDecl *var_decl;
     ASTVariableAssign *var_assign;
     ASTExpr *cond_expr;
@@ -498,7 +512,6 @@ class ASTStatFor : public ASTStat
     ASTExpr *loop_expr;
     ASTBlockStat *block;
 
-public:
     ASTStatFor(ASTVariableDecl *var_decl, ASTVariableAssign *var_assign, ASTExpr *cond_expr, ASTVariable *var, ASTExpr *loop_expr, ASTBlockStat *block) : var_decl(var_decl), var_assign(var_assign), cond_expr(cond_expr), var(var), loop_expr(loop_expr), block(block) {}
 
     virtual void accept(ASTvisitor &v)

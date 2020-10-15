@@ -1,3 +1,1 @@
-func int main() {
-    int x=3,y,z=7+5;
-}
+int x[true];

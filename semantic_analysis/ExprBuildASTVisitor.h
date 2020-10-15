@@ -26,6 +26,7 @@ public:
             }
         }
 
+        node->node_type = NONE;
         return (ASTProg *) node;
     }
 
@@ -40,7 +41,7 @@ public:
         if(context->functionDecl()) func_decl = visit(context->functionDecl());
 
         ASTProgStat *node = new ASTProgStat(var_decl, func_decl);
-
+        node->node_type = NONE;
         return (ASTProgStat *) node;
     }
 
@@ -58,6 +59,8 @@ public:
                 node->statementList.push_back(statementNode);
             }
         }
+
+        node->node_type = NONE;
         return (ASTBlockStat *) node;
     }
 
@@ -65,7 +68,9 @@ public:
     {
         cout << "In visitVarId" << endl;
         string id = context->ID()->getText();
+        
         ASTVariable *node = new ASTVariable(id, (ASTExpr *) nullptr, (ASTExpr *) nullptr);
+        node->node_type = NONE;
         return (ASTVariable *) node;
     }
 
@@ -76,6 +81,7 @@ public:
         ASTExpr* param = visit(context->expr());
 
         ASTVariable *node = new ASTVariable(id, param, (ASTExpr *) nullptr);
+        node->node_type = NONE;
         return (ASTVariable *) node;
     }
 
@@ -87,6 +93,7 @@ public:
         ASTExpr* param2 = visit(context->expr(1));
 
         ASTVariable *node = new ASTVariable(id, param1, param2);
+        node->node_type = NONE;
         return (ASTVariable *) node;
     }
 
@@ -97,6 +104,7 @@ public:
         ASTExpr* exp = visit(context->expr());
 
         ASTVariableAssign *node = new ASTVariableAssign(id, exp);
+        node->node_type = exp->node_type;
         return (ASTVariableAssign *) node;
     }
 
@@ -118,6 +126,7 @@ public:
             }
         }
 
+        node->node_type = getNodeType(lit_type);
         return (ASTVariableDecl *) node;
     }
 
@@ -128,9 +137,12 @@ public:
         ASTVariableAssign* var_assign = (ASTVariableAssign *) nullptr;
 
         if(context->variable()) var = visit(context->variable());
-        if(context->varAssign()) var_assign =visit(context->varAssign());
+        if(context->varAssign()) var_assign = visit(context->varAssign());
 
         ASTVariableDeclType *node = new ASTVariableDeclType(var, var_assign);
+
+        node->node_type = NONE;
+        if(context->varAssign()) node->node_type = var_assign->node_type;
 
         return (ASTVariableDeclType *) node;
     }
@@ -146,6 +158,9 @@ public:
 
         ASTVariableDeclType *node = new ASTVariableDeclType(var, var_assign);
 
+        node->node_type = NONE;
+        if(context->varAssign()) node->node_type = var_assign->node_type;
+        
         return (ASTVariableDeclType *) node;
     }
 
@@ -156,6 +171,8 @@ public:
         string id = context->ID()->getText();
 
         ASTFuncArg *node = new ASTFuncArg(lit_type, id, 0);
+        
+        node->node_type = getNodeType(lit_type);
         return (ASTFuncArg *) node;
     }
 
@@ -166,6 +183,7 @@ public:
         string id = context->ID()->getText();
 
         ASTFuncArg *node = new ASTFuncArg(lit_type, id, 1);
+        node->node_type = getNodeType(lit_type);
         return (ASTFuncArg *) node;
     }
 
@@ -176,6 +194,8 @@ public:
         string id = context->ID()->getText();
 
         ASTFuncArg *node = new ASTFuncArg(lit_type, id, 2);
+        
+        node->node_type = getNodeType(lit_type);
         return (ASTFuncArg *) node;
     }
 
@@ -197,6 +217,7 @@ public:
             }
         }
 
+        node->node_type = getNodeType(lit_type);
         return (ASTFuncDecl *) node;
     }
 
@@ -216,6 +237,7 @@ public:
             }
         }
 
+        node->node_type = NONE;
         return (ASTFuncCall *) node;
     }
 
@@ -224,6 +246,7 @@ public:
         cout << "In visitExprVar" << endl;
         ASTVariable *var = visit(context->variable());
         ASTExprVar *node = new ASTExprVar(var);
+        node->node_type = NONE;
         return (ASTExpr *) node;
     }
 
@@ -234,6 +257,7 @@ public:
         ASTExpr *exp = visit(context->expr());
 
         ASTExprUnary *node = new ASTExprUnary(op, exp);
+        node->node_type = INT;
         return (ASTExpr *) node;
     }
 
@@ -244,6 +268,7 @@ public:
         ASTExpr *exp = visit(context->expr());
 
         ASTExprUnary *node = new ASTExprUnary(op, exp);
+        node->node_type = BOOL;
         return (ASTExpr *) node;
     }
 
@@ -256,6 +281,7 @@ public:
         ASTExpr *right = visit(context->expr(1));
 
         ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        node->node_type = INT;
         return (ASTExpr *) node;
     }
 
@@ -268,6 +294,7 @@ public:
         ASTExpr *right = visit(context->expr(1));
 
         ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        node->node_type = INT;
         return (ASTExpr *) node;
     }
 
@@ -280,6 +307,7 @@ public:
         ASTExpr *right = visit(context->expr(1));
 
         ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        node->node_type = BOOL;
         return (ASTExpr *) node;
     }
 
@@ -292,6 +320,7 @@ public:
         ASTExpr *right = visit(context->expr(1));
 
         ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        node->node_type = BOOL;
         return (ASTExpr *) node;
     }
 
@@ -304,6 +333,7 @@ public:
         ASTExpr *right = visit(context->expr(1));
 
         ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        node->node_type = BOOL;
         return (ASTExpr *) node;
     }
 
@@ -316,6 +346,7 @@ public:
         ASTExpr *right = visit(context->expr(1));
 
         ASTExprBinary *node = new ASTExprBinary(op, left, right);
+        node->node_type = BOOL;
         return (ASTExpr *) node;
     }
 
@@ -328,6 +359,7 @@ public:
         ASTExpr *third_node = visit(context->expr(2));
 
         ASTExprTernary *node = new ASTExprTernary(first_node, second_node, third_node);
+        node->node_type = NONE;
         return (ASTExpr *) node;
     }
 
@@ -335,6 +367,7 @@ public:
     {
         cout << "In visitExprInt" << endl;
         ASTExprInt *node = new ASTExprInt(stoi(context->INT()->getText()));
+        node->node_type = INT;
         return (ASTExpr *) node;
     }
 
@@ -342,6 +375,7 @@ public:
     {
         cout << "In visitExprFloat" << endl;
         ASTExprFloat *node = new ASTExprFloat(stof(context->FLOAT()->getText()));
+        node->node_type = FLOAT;
         return (ASTExpr *) node;
     }
 
@@ -349,6 +383,7 @@ public:
     {
         cout << "In visitExprChar" << endl;
         ASTExprChar *node = new ASTExprChar((context->CHAR()->getText())[0]);
+        node->node_type = CHAR;
         return (ASTExpr *) node;
     }
 
@@ -361,6 +396,7 @@ public:
         if(bool_type == "true") node = new ASTExprBool(true);
         else node = new ASTExprBool(false);
 
+        node->node_type = BOOL;
         return (ASTExpr *) node;
     }
 
@@ -368,6 +404,8 @@ public:
     {
         cout << "In visitExprString" << endl;
         ASTExprString *node = new ASTExprString(context->STRING()->getText());
+        
+        node->node_type = STRING;
         return (ASTExpr *) node;
     }
 
@@ -382,6 +420,8 @@ public:
         cout << "In visitExprFuncCall" << endl;
         ASTFuncCall *func_call = visit(context->functionCall());
         ASTExprFuncCall *node = new ASTExprFuncCall(func_call);
+
+        node->node_type = NONE;
         return (ASTExpr *) node;
     }
 
@@ -392,6 +432,7 @@ public:
         ASTExpr *exp = visit(context->expr());
 
         ASTStatVarAssign *node = new ASTStatVarAssign(var, exp);
+        node->node_type = exp->node_type;
         return (ASTStat *) node;
     }
 
@@ -400,6 +441,7 @@ public:
         cout << "In visitStatVarDecl" << endl;
         ASTVariableDecl *var_decl = visit(context->varDecl());
         ASTStatVarDecl *node = new ASTStatVarDecl(var_decl);
+        node->node_type = var_decl->node_type;
         return (ASTStat *) node;
     }
 
@@ -408,6 +450,7 @@ public:
         cout << "In visitStatBlock" << endl;
         ASTBlockStat *block = visit(context->block());
         ASTStatBlock *node = new ASTStatBlock(block);
+        node->node_type = NONE;
         return (ASTStat *) node;
     }
 
@@ -416,6 +459,7 @@ public:
         cout << "In visitStatFuncCall" << endl;
         ASTFuncCall *func_call = visit(context->functionCall());
         ASTStatFuncCall *node = new ASTStatFuncCall(func_call);
+        node->node_type = NONE;
         return (ASTStat *) node;
     }
 
@@ -426,6 +470,7 @@ public:
         if(context->expr()) exp = visit(context->expr());
 
         ASTStatReturn *node = new ASTStatReturn(exp);
+        node->node_type = NONE;
         return (ASTStat *) node;
     }
 
@@ -433,6 +478,7 @@ public:
     {
         cout << "In visitStatBreak" << endl;
         ASTStatLoopControl *node = new ASTStatLoopControl("break");
+        node->node_type = NONE;
         return (ASTStat *) node;
     }
 
@@ -440,6 +486,7 @@ public:
     {
         cout << "In visitStatContinue" << endl;
         ASTStatLoopControl *node = new ASTStatLoopControl("continue");
+        node->node_type = NONE;
         return (ASTStat *) node;
     }
 
@@ -449,6 +496,8 @@ public:
         ASTExpr *exp = visit(context->expr());
         ASTBlockStat *block = visit(context->block());
         ASTStatWhile *node = new ASTStatWhile(exp, block);
+
+        node->node_type = NONE;
         return (ASTStat *) node;
     }
 
@@ -477,6 +526,7 @@ public:
             }
         }
 
+        node->node_type = NONE;
         return (ASTStat *) node;
     }
 
@@ -502,7 +552,8 @@ public:
         ASTBlockStat *block = visit(context->block());
 
         ASTStatFor *node = new ASTStatFor(var_decl, var_assign, cond_expr, var, loop_expr, block);
-        return (ASTStat *) nullptr;
+        node->node_type = NONE;
+        return (ASTStat *) node;
     }
 
 };
