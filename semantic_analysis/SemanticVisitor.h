@@ -112,6 +112,13 @@ public:
 
         node.node_type = getNodeType(node.lit_type);
 
+        // check main
+        if(node.id == "main")
+        {
+            if(int(args.size()) > 0) error("Invalid main function");
+            if(node.node_type != INT) error("Invalid main function type");
+        }
+
         for(auto funcArg : node.funcArgList) funcArg->accept(*this);
         (node.block)->accept(*this);
 
