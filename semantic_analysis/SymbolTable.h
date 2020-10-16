@@ -58,6 +58,33 @@ public:
     vector<NodeType> getArgs(string id) {
         return var_map[id].argument_types;
     }
+
+    bool isFunction(string id) {
+        if(var_map[id].dimensions == -1) return true;
+        return false;
+    }
+
+    bool isValidFunctionCall(string id, vector<NodeType>& args) {
+        if(!existsInScope(id)) return false;
+        if(!isFunction(id)) return false;
+
+        vector<NodeType> func_args = getArgs(id);
+        if(args.size() != func_args.size()) return false;
+        for(int i=0; i<int(args.size()); ++i)
+        {
+            if(func_args[i] != args[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    bool isValidVariable(string id, int dimensions) {
+        if(!existsInScope(id)) return false;
+        if(dimensions != getDimensions(id)) return false;
+
+        return true;
+    }
 };
 
 class SymbolTable
@@ -100,7 +127,66 @@ public:
                 return scopes[i]->getDetails(id);
         }
 
-        error("Invlalid reference");
+        error("Invalid reference");
+    }
+
+    NodeType getType(string id) {
+        int n = scopes.size();
+        for(int i=n-1; i>=0; --i)
+        {
+            if(scopes[i]->existsInScope(id))
+                return scopes[i]->getType(id);
+        }
+
+        return NONE;
+        // error("Invalid reference");
+    }
+
+    int getDimensions(string id) {
+        int n = scopes.size();
+        for(int i=n-1; i>=0; --i)
+        {
+            if(scopes[i]->existsInScope(id))
+                return scopes[i]->getDimensions(id);
+        }
+
+        error("Invalid reference");
+    }
+
+    vector<NodeType> getArgs(string id) {
+        int n = scopes.size();
+        for(int i=n-1; i>=0; --i)
+        {
+            if(scopes[i]->existsInScope(id))
+                return scopes[i]->getArgs(id);
+        }
+
+        error("Invalid reference");
+    }
+
+    bool existsInCurrentScope(string id) {
+        int n = scopes.size();
+        return scopes[n-1]->existsInScope(id);
+    }
+
+    bool isValidFunctionCall(string id, vector<NodeType> args) {
+        int n = scopes.size();
+        for(int i=n-1; i>=0; --i)
+        {
+            if(scopes[i]->isValidFunctionCall(id, args))
+                return true;
+        }
+        return false;
+    }
+
+    bool isValidVariable(string id, int dimensions) {
+        int n = scopes.size();
+        for(int i=n-1; i>=0; --i)
+        {
+            if(scopes[i]->isValidVariable(id, dimensions))
+                return true;
+        }
+        return false;
     }
 
     void removeScope() {

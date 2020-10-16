@@ -1,3 +1,7 @@
-func int main(int a) {
-    int x = 1;
+func int trial(int y) {
+    return 1;
+}
+
+func int main() {
+    int x = trial();
 }

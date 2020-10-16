@@ -136,6 +136,12 @@ public:
     {
         v.visit(*this);
     }
+
+    int getDimensions() {
+        if(!param1) return 0;
+        if(!param2) return 1;
+        return 2;
+    }
 };
 
 class ASTVariableAssign : public ASTnode
@@ -177,6 +183,11 @@ public:
     virtual void accept(ASTvisitor &v)
     {
         v.visit(*this);
+    }
+
+    string getId() {
+        if(var) return var->id;
+        return var_assign->id;
     }
 };
 

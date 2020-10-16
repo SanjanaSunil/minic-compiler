@@ -3,6 +3,10 @@
 #include "SymbolTable.h"
 using namespace std;
 
+/*
+    * Check not only if it exists but also if it is of same dimensions
+*/
+
 class SemanticVisitor : public ASTvisitor
 {
     SymbolTable *symbol_table;
@@ -49,6 +53,8 @@ public:
             (node.param2)->accept(*this);
             if(node.param2->node_type != INT) error("Invalid array indexing");
         }
+
+        node.node_type = symbol_table->getType(node.id);
     }
 
     virtual void visit(ASTVariableAssign &node)
@@ -61,11 +67,19 @@ public:
     // Add to symbol table
     virtual void visit(ASTVariableDecl &node)
     {
+        node.node_type = getNodeType(node.lit_type);
         for(auto varDecl : node.varList)
         {
             varDecl->accept(*this);
             if(varDecl->var_assign && node.node_type != varDecl->var_assign->node_type)
                 error("Invalid assignment");
+            
+            if(symbol_table->existsInCurrentScope(node.lit_type))
+                error("Variable already defined");
+
+            int dims = 0;
+            if(varDecl->var) dims = varDecl->var->getDimensions();
+            symbol_table->addVariableToCurrentScope(varDecl->getId(), node.lit_type, dims);
         }
     }
 
@@ -82,15 +96,19 @@ public:
     // Add to symbol table along with dimension
     virtual void visit(ASTFuncArg &node)
     {
-        return;
+        symbol_table->addVariableToCurrentScope(node.id, node.lit_type, node.dimension);
+        node.node_type = getNodeType(node.lit_type);
     }
 
     // Add to symbol table
     virtual void visit(ASTFuncDecl &node)
     {
         vector<string> args;
-        for(auto funcArg : node.funcArgList) args.push_back(funcArg->id);
+        for(auto funcArg : node.funcArgList) args.push_back(funcArg->lit_type);
         symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args);
+        symbol_table->addFunctionScope(node.lit_type);
+
+        node.node_type = getNodeType(node.lit_type);
 
         for(auto funcArg : node.funcArgList) funcArg->accept(*this);
         (node.block)->accept(*this);
@@ -99,10 +117,17 @@ public:
     // Check symbol table, check if arguments are correct in number and type
     virtual void visit(ASTFuncCall &node)
     {
+        vector<NodeType> args;
         for(auto exp : node.funcArgList)
         {
             exp->accept(*this);
+            args.push_back(exp->node_type);
         }
+
+        if(!symbol_table->isValidFunctionCall(node.id, args))
+            error("Invalid function call");
+        
+        node.node_type = symbol_table->getType(node.id);
     }
 
     // Assign type to whatever type the variable is
@@ -116,11 +141,13 @@ public:
         (node.exp)->accept(*this);
         if(node.unary_op == "+" || node.unary_op == "-")
         {
+            node.node_type = INT;
             if((node.exp)->node_type == CHAR || (node.exp)->node_type == STRING)
                 error("Invalid unary operation");
         }
         else if(node.unary_op == "!")
         {
+            node.node_type = BOOL;
             if((node.exp)->node_type != BOOL && (node.exp)->node_type != INT)
                 error("Invalid unary operation");
         }
@@ -137,6 +164,11 @@ public:
 
         if(left_type == CHAR || left_type == STRING || right_type == CHAR || right_type == STRING)
             error("Invalid binary operation");
+
+        if(bin_op == "+" || bin_op == "-" || bin_op == "/" || bin_op == "*" || bin_op == "/")
+            node.node_type = INT;
+        else
+            node.node_type = BOOL;
     }
 
     virtual void visit(ASTExprTernary &node)
@@ -150,12 +182,19 @@ public:
         
         if((node.second)->node_type != (node.third)->node_type)
             error("Incompatible ternary returns");
+
+        node.node_type = (node.second)->node_type;
     }
 
     // Set node type acc to symbol table
     virtual void visit(ASTExprVar &node)
     {
-        return;
+        (node.var)->accept(*this);
+        node.node_type = (node.var)->node_type;
+
+        if(node.node_type == NONE) error("Variable does not exist");
+        if(!symbol_table->isValidVariable((node.var)->id, (node.var)->getDimensions()))
+            error("Invalid reference");
     }
 
     // Set node type acc to symbol table
