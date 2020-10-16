@@ -5,7 +5,7 @@
 
 using namespace std;
 
-enum ScopeType{Function, Block};
+enum ScopeType{Function, Block, Loop};
 
 struct VariableDetails
 {
@@ -97,6 +97,11 @@ public:
         scopes.push_back(block_scope);
     }
 
+    void addLoopScope() {
+        Scope *loop_scope = new Scope(Loop, NONE);
+        scopes.push_back(loop_scope);
+    }
+
     void addFunctionScope(string return_type) {
         NodeType ret_type = getNodeType(return_type);
         Scope *func_scope = new Scope(Function, ret_type);
@@ -165,8 +170,7 @@ public:
     }
 
     bool existsInCurrentScope(string id) {
-        int n = scopes.size();
-        return scopes[n-1]->existsInScope(id);
+        return (scopes.back())->existsInScope(id);
     }
 
     bool isValidFunctionCall(string id, vector<NodeType> args) {
@@ -187,6 +191,14 @@ public:
                 return true;
         }
         return false;
+    }
+
+    ScopeType getCurrentScope() {
+        return (scopes.back())->scope_type;
+    }
+
+    NodeType getCurrentReturnType() {
+        return (scopes.back())->return_type;
     }
 
     void removeScope() {

@@ -21,6 +21,8 @@ public:
         symbol_table->addBlockScope();
         for (auto progStat : node.progStatList)
             progStat->accept(*this);
+        
+        symbol_table->removeScope();
     }
 
     // Add to symbol table
@@ -112,6 +114,8 @@ public:
 
         for(auto funcArg : node.funcArgList) funcArg->accept(*this);
         (node.block)->accept(*this);
+
+        symbol_table->removeScope();
     }
 
     // Check symbol table, check if arguments are correct in number and type
@@ -209,6 +213,12 @@ public:
     {
         (node.exp)->accept(*this);
         node.node_type = (node.exp)->node_type;
+
+        if(!symbol_table->isValidVariable((node.var)->id, (node.var)->getDimensions()))
+            error("Invalid reference");
+
+        if(symbol_table->getType((node.var)->id) != node.node_type)
+            error("Invalid assignment");
     }
 
     virtual void visit(ASTStatVarDecl &node)
@@ -220,13 +230,16 @@ public:
     // Create new scope
     virtual void visit(ASTStatBlock &node)
     {
+        symbol_table->addBlockScope();
         (node.block)->accept(*this);
+        symbol_table->removeScope();
     }
 
     // Nothing to do here since it will already check
     virtual void visit(ASTStatFuncCall &node)
     {
         (node.func_call)->accept(*this);
+        node.node_type = (node.func_call)->node_type;
     }
 
     // Check if currect return type, if in function
@@ -237,12 +250,20 @@ public:
             (node.return_expr)->accept(*this);
             node.node_type = (node.return_expr)->node_type;
         }
+        else node.node_type = NONE;
+
+        if(symbol_table->getCurrentScope() != Function)
+            error("Incorrect return statement");
+        
+        if(node.node_type != symbol_table->getCurrentReturnType())
+            error("Invalid return type");
     }
 
     // Check if in loop or function
     virtual void visit(ASTStatLoopControl &node)
     {
-        return;
+        if(symbol_table->getCurrentScope() != Loop)
+            error("Invalid " + node.control_stat + " statement");
     }
 
     virtual void visit(ASTStatWhile &node)
