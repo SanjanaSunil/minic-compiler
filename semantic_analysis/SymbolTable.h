@@ -202,6 +202,8 @@ public:
     }
 
     void removeScope() {
+        Scope* recent_scope = scopes.back();
         scopes.pop_back();
+        delete recent_scope;
     }
 };

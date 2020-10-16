@@ -272,7 +272,9 @@ public:
         if((node.exp)->node_type != INT && (node.exp)->node_type != BOOL)
             error("Invalid loop condition");
 
+        symbol_table->addLoopScope();
         (node.block)->accept(*this);
+        symbol_table->removeScope();
     }
 
     virtual void visit(ASTStatIf &node)
@@ -284,22 +286,51 @@ public:
                 error("Invalid if condition");
         }
 
-        for(auto block : node.blockList) block->accept(*this);
+        for(auto block : node.blockList) 
+        {
+            symbol_table->addBlockScope();
+            block->accept(*this);
+            symbol_table->removeScope();
+        }
     }
 
     virtual void visit(ASTStatFor &node) {
         if(node.var_decl) (node.var_decl)->accept(*this);
-        if(node.init_var) (node.init_var)->accept(*this);
-        if(node.init_expr) (node.init_expr)->accept(*this);
+        if(node.init_var && node.init_expr) 
+        {
+            (node.init_var)->accept(*this);
+            (node.init_expr)->accept(*this);
+
+            node.node_type = (node.init_expr)->node_type;
+
+            if(!symbol_table->isValidVariable((node.init_var)->id, (node.init_var)->getDimensions()))
+                error("Invalid reference");
+
+            if(symbol_table->getType((node.init_var)->id) != node.node_type)
+                error("Invalid assignment");
+        }
 
         if(node.cond_expr) (node.cond_expr)->accept(*this);
         if((node.cond_expr)->node_type != BOOL && (node.cond_expr)->node_type != INT)
             error("Invalid for loop");
 
-        if(node.loop_var) (node.loop_var)->accept(*this);
-        if(node.loop_expr) (node.loop_expr)->accept(*this);
-        
-        if(node.block) (node.block)->accept(*this);
+        if(node.loop_var && node.loop_expr) 
+        {
+            (node.loop_var)->accept(*this);
+            (node.loop_expr)->accept(*this);
+
+            node.node_type = (node.loop_expr)->node_type;
+
+            if(!symbol_table->isValidVariable((node.loop_var)->id, (node.loop_var)->getDimensions()))
+                error("Invalid reference");
+
+            if(symbol_table->getType((node.loop_var)->id) != node.node_type)
+                error("Invalid assignment");
+        }
+
+        symbol_table->addBlockScope();
+        (node.block)->accept(*this);
+        symbol_table->removeScope();
     }
     
 };
