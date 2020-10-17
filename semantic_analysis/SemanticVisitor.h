@@ -6,12 +6,14 @@ using namespace std;
 class SemanticVisitor : public ASTvisitor
 {
     bool return_found;
+    bool is_function_call;
     SymbolTable *symbol_table;
 
 public:
     SemanticVisitor() {
         symbol_table = new SymbolTable();
         return_found = false;
+        is_function_call = false;
     }
 
     virtual void visit(ASTProg &node)
@@ -134,14 +136,25 @@ public:
         vector<NodeType> args;
         for(auto exp : node.funcArgList)
         {
+            is_function_call = true;
             exp->accept(*this);
             args.push_back(exp->node_type);
+
+            if(node.id == "input" && exp->node_type == NONE) error("Invalid input function");
+            if(node.id == "print" && exp->node_type == NONE) error("Invalid print function");
+        }
+
+        if(node.id == "input" || node.id == "print")
+        {
+            node.node_type = NONE;
+            return;
         }
 
         if(!symbol_table->isValidFunctionCall(node.id, args))
             error("Invalid function call");
         
         node.node_type = symbol_table->getType(node.id);
+        is_function_call = false;
     }
 
     // Assign type to whatever type the variable is
@@ -216,7 +229,11 @@ public:
         node.node_type = (node.var)->node_type;
 
         if(node.node_type == NONE) error("Variable does not exist");
-        if(!symbol_table->isValidVariable((node.var)->id, (node.var)->getDimensions()))
+        
+        int dimensions = (node.var)->getDimensions();
+        if(is_function_call) dimensions = symbol_table->getDimensions((node.var)->id);
+
+        if(!symbol_table->isValidVariable((node.var)->id, dimensions))
             error("Invalid reference");
     }
 
@@ -273,7 +290,7 @@ public:
         }
         else node.node_type = NONE;
 
-        if(symbol_table->getCurrentScope() != Function)
+        if(!symbol_table->scopeTypeExists(Function))
             error("Incorrect return statement");
         
         if(node.node_type != symbol_table->getCurrentReturnType())
@@ -283,7 +300,7 @@ public:
     // Check if in loop or function
     virtual void visit(ASTStatLoopControl &node)
     {
-        if(symbol_table->getCurrentScope() != Loop)
+        if(!symbol_table->scopeTypeExists(Loop))
             error("Invalid " + node.control_stat + " statement");
     }
 

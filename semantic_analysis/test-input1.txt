@@ -1,4 +1,0 @@
-func int main() {
-    bool x = 1 + 1;
-    return 0;
-}

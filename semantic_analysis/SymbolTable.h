@@ -193,12 +193,22 @@ public:
         return false;
     }
 
-    ScopeType getCurrentScope() {
-        return (scopes.back())->scope_type;
+    NodeType getCurrentReturnType() {
+        for(int i=0; i<int(scopes.size()); ++i)
+        {
+            if(scopes[i]->scope_type == Function)
+                return scopes[i]->return_type;
+        }
+        return NONE;
     }
 
-    NodeType getCurrentReturnType() {
-        return (scopes.back())->return_type;
+    bool scopeTypeExists(ScopeType scope_type) {
+        for(int i=0; i<int(scopes.size()); ++i)
+        {
+            if(scopes[i]->scope_type == scope_type)
+                return true;
+        }
+        return false;
     }
 
     void removeScope() {
