@@ -12,6 +12,7 @@ struct VariableDetails
     NodeType var_type;
     int dimensions; // -1 if it's a function
     vector<NodeType> argument_types; // Only for functions
+    vector<int> argument_dims;
 };
 
 class Scope
@@ -33,14 +34,14 @@ public:
         error(id + " has already been defined");
     }
 
-    void addFunction(string id, NodeType ret_type, vector<NodeType> args) {
+    void addFunction(string id, NodeType ret_type, vector<NodeType> args, vector<int> dims) {
         if(existsInScope(id)) redefineError(id);
-        var_map[id] = {ret_type, -1, args};
+        var_map[id] = {ret_type, -1, args, dims};
     }
 
     void addVariable(string id, NodeType var_type, int dims) {
         if(existsInScope(id)) redefineError(id);
-        var_map[id] = {var_type, dims, {}};
+        var_map[id] = {var_type, dims, {}, {}};
     }
 
     VariableDetails getDetails(string id) {
@@ -59,20 +60,25 @@ public:
         return var_map[id].argument_types;
     }
 
+    vector<int> getDims(string id) {
+        return var_map[id].argument_dims;
+    }
+
     bool isFunction(string id) {
         if(var_map[id].dimensions == -1) return true;
         return false;
     }
 
-    bool isValidFunctionCall(string id, vector<NodeType>& args) {
+    bool isValidFunctionCall(string id, vector<NodeType>& args, vector<int>& dims) {
         if(!existsInScope(id)) return false;
         if(!isFunction(id)) return false;
 
         vector<NodeType> func_args = getArgs(id);
+        vector<int> func_dims = getDims(id);
         if(args.size() != func_args.size()) return false;
         for(int i=0; i<int(args.size()); ++i)
         {
-            if(func_args[i] != args[i])
+            if(func_args[i] != args[i] || func_dims[i] != dims[i])
                 return false;
         }
 
@@ -108,14 +114,14 @@ public:
         scopes.push_back(func_scope);
     }
 
-    void addFunctionToCurrentScope(string id, string return_type, vector<string>& arguments) {
+    void addFunctionToCurrentScope(string id, string return_type, vector<string>& arguments, vector<int>& dims) {
         NodeType ret_type = getNodeType(return_type);
 
         vector<NodeType> args;
         for(string argument : arguments) args.push_back(getNodeType(argument));
 
         Scope *recent_scope = scopes.back();
-        recent_scope->addFunction(id, ret_type, args);
+        recent_scope->addFunction(id, ret_type, args, dims);
     }
 
     void addVariableToCurrentScope(string id, string variable_type, int dims) {
@@ -169,15 +175,26 @@ public:
         error("Invalid reference");
     }
 
+    vector<int> getDims(string id) {
+        int n = scopes.size();
+        for(int i=n-1; i>=0; --i)
+        {
+            if(scopes[i]->existsInScope(id))
+                return scopes[i]->getDims(id);
+        }
+
+        error("Invalid reference");
+    }
+
     bool existsInCurrentScope(string id) {
         return (scopes.back())->existsInScope(id);
     }
 
-    bool isValidFunctionCall(string id, vector<NodeType> args) {
+    bool isValidFunctionCall(string id, vector<NodeType> args, vector<int> dims) {
         int n = scopes.size();
         for(int i=n-1; i>=0; --i)
         {
-            if(scopes[i]->isValidFunctionCall(id, args))
+            if(scopes[i]->isValidFunctionCall(id, args, dims))
                 return true;
         }
         return false;

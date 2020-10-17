@@ -4,6 +4,6 @@ func void comb(int arr[]) {
 
 func int main() {
     int arr[2];
-    comb(2);
+    comb(arr[1]);
     return 0;
 }

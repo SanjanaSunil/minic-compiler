@@ -5,6 +5,7 @@ using namespace std;
 
 class SemanticVisitor : public ASTvisitor
 {
+    int func_arg_dims;
     bool return_found;
     bool is_function_call;
     SymbolTable *symbol_table;
@@ -14,6 +15,7 @@ public:
         symbol_table = new SymbolTable();
         return_found = false;
         is_function_call = false;
+        func_arg_dims = 0;
     }
 
     virtual void visit(ASTProg &node)
@@ -108,8 +110,13 @@ public:
         return_found = false;
 
         vector<string> args;
-        for(auto funcArg : node.funcArgList) args.push_back(funcArg->lit_type);
-        symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args);
+        vector<int> dims;
+        for(auto funcArg : node.funcArgList)
+        {
+            args.push_back(funcArg->lit_type);
+            dims.push_back(funcArg->dimension);
+        }
+        symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args, dims);
         symbol_table->addFunctionScope(node.lit_type);
 
         node.node_type = getNodeType(node.lit_type);
@@ -134,11 +141,15 @@ public:
     virtual void visit(ASTFuncCall &node)
     {
         vector<NodeType> args;
+        vector<int> dims;
         for(auto exp : node.funcArgList)
         {
             is_function_call = true;
+            func_arg_dims = 0;
+
             exp->accept(*this);
             args.push_back(exp->node_type);
+            dims.push_back(func_arg_dims);
 
             if(node.id == "input" && exp->node_type == NONE) error("Invalid input function");
             if(node.id == "print" && exp->node_type == NONE) error("Invalid print function");
@@ -150,7 +161,7 @@ public:
             return;
         }
 
-        if(!symbol_table->isValidFunctionCall(node.id, args))
+        if(!symbol_table->isValidFunctionCall(node.id, args, dims))
             error("Invalid function call");
         
         node.node_type = symbol_table->getType(node.id);
@@ -197,14 +208,14 @@ public:
             if(left_type != BOOL) error("Invalid binary operation");
             node.node_type = BOOL;
         }
-        else if(bin_op == "==" || bin_op == "!=") node.node_type = left_type;
+        else if(bin_op == "==" || bin_op == "!=") node.node_type = BOOL;
         else
         {
             if(left_type != INT && left_type != FLOAT) error("Invalid binary operation");
             node.node_type = left_type;
-        }
-        
-        node.node_type = left_type;
+            if(bin_op == "<" || bin_op == ">" || bin_op == "<=" || bin_op == ">=")
+                node.node_type = BOOL;
+        }        
     }
 
     virtual void visit(ASTExprTernary &node)
@@ -229,12 +240,24 @@ public:
         node.node_type = (node.var)->node_type;
 
         if(node.node_type == NONE) error("Variable does not exist");
-        
+
         int dimensions = (node.var)->getDimensions();
-        if(is_function_call) dimensions = symbol_table->getDimensions((node.var)->id);
+        if(is_function_call)
+        {
+            dimensions = symbol_table->getDimensions((node.var)->id);
+            if((node.var)->getDimensions() > dimensions)
+                error("Invalid array indexing");
+        }
 
         if(!symbol_table->isValidVariable((node.var)->id, dimensions))
             error("Invalid reference");
+    
+        if(is_function_call) 
+        {
+            int call_dimension = (node.var)->getDimensions();
+            int actual_dimension = dimensions;
+            func_arg_dims = actual_dimension - call_dimension;
+        }
     }
 
     // Set node type acc to symbol table
@@ -333,6 +356,8 @@ public:
     }
 
     virtual void visit(ASTStatFor &node) {
+        symbol_table->addBlockScope();
+
         if(node.var_decl) (node.var_decl)->accept(*this);
         if(node.init_var && node.init_expr) 
         {
@@ -366,7 +391,6 @@ public:
                 error("Invalid assignment");
         }
 
-        symbol_table->addBlockScope();
         (node.block)->accept(*this);
         symbol_table->removeScope();
     }
