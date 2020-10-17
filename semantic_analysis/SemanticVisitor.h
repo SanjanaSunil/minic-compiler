@@ -3,17 +3,15 @@
 #include "SymbolTable.h"
 using namespace std;
 
-/*
-    * Check not only if it exists but also if it is of same dimensions
-*/
-
 class SemanticVisitor : public ASTvisitor
 {
+    bool return_found;
     SymbolTable *symbol_table;
 
 public:
     SemanticVisitor() {
         symbol_table = new SymbolTable();
+        return_found = false;
     }
 
     virtual void visit(ASTProg &node)
@@ -105,6 +103,8 @@ public:
     // Add to symbol table
     virtual void visit(ASTFuncDecl &node)
     {
+        return_found = false;
+
         vector<string> args;
         for(auto funcArg : node.funcArgList) args.push_back(funcArg->lit_type);
         symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args);
@@ -121,6 +121,9 @@ public:
 
         for(auto funcArg : node.funcArgList) funcArg->accept(*this);
         (node.block)->accept(*this);
+
+        if(!return_found && node.node_type != NONE)
+            error("Return statement not found");
 
         symbol_table->removeScope();
     }
@@ -152,14 +155,14 @@ public:
         (node.exp)->accept(*this);
         if(node.unary_op == "+" || node.unary_op == "-")
         {
-            node.node_type = INT;
-            if((node.exp)->node_type == CHAR || (node.exp)->node_type == STRING)
+            node.node_type = (node.exp)->node_type;
+            if((node.exp)->node_type != INT && (node.exp)->node_type != FLOAT)
                 error("Invalid unary operation");
         }
         else if(node.unary_op == "!")
         {
             node.node_type = BOOL;
-            if((node.exp)->node_type != BOOL && (node.exp)->node_type != INT)
+            if((node.exp)->node_type != BOOL)
                 error("Invalid unary operation");
         }
     }
@@ -173,13 +176,22 @@ public:
         NodeType left_type = (node.left)->node_type;
         NodeType right_type = (node.right)->node_type;
 
-        if(left_type == CHAR || left_type == STRING || right_type == CHAR || right_type == STRING)
+        if(left_type != right_type || left_type == CHAR || left_type == STRING || left_type == NONE)
             error("Invalid binary operation");
 
-        if(bin_op == "+" || bin_op == "-" || bin_op == "/" || bin_op == "*" || bin_op == "/")
-            node.node_type = INT;
-        else
+        if(bin_op == "&&" || bin_op == "||")
+        {
+            if(left_type != BOOL) error("Invalid binary operation");
             node.node_type = BOOL;
+        }
+        else if(bin_op == "==" || bin_op == "!=") node.node_type = left_type;
+        else
+        {
+            if(left_type != INT && left_type != FLOAT) error("Invalid binary operation");
+            node.node_type = left_type;
+        }
+        
+        node.node_type = left_type;
     }
 
     virtual void visit(ASTExprTernary &node)
@@ -188,7 +200,7 @@ public:
         (node.second)->accept(*this);
         (node.third)->accept(*this);
 
-        if((node.first)->node_type != BOOL && (node.first)->node_type != INT) 
+        if((node.first)->node_type != BOOL) 
             error("Invalid ternary condition");
         
         if((node.second)->node_type != (node.third)->node_type)
@@ -252,6 +264,8 @@ public:
     // Check if currect return type, if in function
     virtual void visit(ASTStatReturn &node)
     {
+        return_found = true;
+
         if(node.return_expr) 
         {
             (node.return_expr)->accept(*this);
