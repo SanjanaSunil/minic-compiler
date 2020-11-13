@@ -1,0 +1,9 @@
+func void comb(int arr[]) {
+
+}
+
+func int main() {
+    int arr[2];
+    comb(arr);
+    return 0;
+}
