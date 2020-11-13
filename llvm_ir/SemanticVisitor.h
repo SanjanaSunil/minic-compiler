@@ -213,6 +213,21 @@ public:
         return llvm::ConstantFP::get(llvm::Type::getFloatTy(*Context), node.floatlit);
     }
 
+    virtual llvm::Value* visit(ASTExprChar &node)
+    {
+        return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), node.charlit);
+    }
+
+    virtual llvm::Value* visit(ASTExprBool &node)
+    {
+        return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*Context), node.boollit);
+    }
+
+    virtual llvm::Value* visit(ASTExprString &node)
+    {
+        return Builder->CreateGlobalStringPtr(node.stringlit);
+    }
+
     virtual llvm::Value* visit(ASTExprUnary &node)
     {
         (node.exp)->accept(*this);
@@ -234,8 +249,10 @@ public:
 
     virtual llvm::Value* visit(ASTExprBinary &node)
     {
-        (node.left)->accept(*this);
-        (node.right)->accept(*this);
+        llvm::Value *l = (node.left)->accept(*this);
+        llvm::Value *r = (node.right)->accept(*this);
+
+        // l->print(llvm::errs(), true);
 
         string bin_op = node.bin_operator;
         NodeType left_type = (node.left)->node_type;
@@ -257,6 +274,22 @@ public:
             if(bin_op == "<" || bin_op == ">" || bin_op == "<=" || bin_op == ">=")
                 node.node_type = BOOL;
         }  
+
+        if(bin_op == "+") return Builder->CreateAdd(l, r, "addition");
+        if(bin_op == "-") return Builder->CreateSub(l, r, "subtraction");
+        if(bin_op == "*") return Builder->CreateMul(l, r, "multiplication");
+        if(bin_op == "/") return Builder->CreateSDiv(l, r, "division");
+        if(bin_op == "%") return Builder->CreateSRem(l, r, "mod");
+        
+        if(bin_op == "<") return Builder->CreateICmpSLT(l, r, "lt");
+        if(bin_op == "<=") return Builder->CreateICmpSLE(l, r, "le");
+        if(bin_op == ">") return Builder->CreateICmpSGT(l, r, "gt");
+        if(bin_op == ">=") return Builder->CreateICmpSGE(l, r, "ge");
+        if(bin_op == "==") return Builder->CreateICmpEQ(l, r, "equal");
+        if(bin_op == "!=") return Builder->CreateICmpNE(l, r, "unequal");
+        
+        if(bin_op == "&&") return Builder->CreateAnd(l, r, "and");
+        if(bin_op == "||") return Builder->CreateOr(l, r, "or");
 
         return nullptr;      
     }
