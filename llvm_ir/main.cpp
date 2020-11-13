@@ -44,5 +44,7 @@ int main(int argc, const char* argv[]) {
     SemanticVisitor *sv = new SemanticVisitor();
     sv->visit(*program_root);
 
+    sv->TheModule->print(llvm::errs(), nullptr);
+    
     return 0;
 }

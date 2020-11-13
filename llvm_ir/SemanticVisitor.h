@@ -11,20 +11,21 @@ class SemanticVisitor : public ASTvisitor
     bool is_function_call;
     SymbolTable *symbol_table;
 
-    unique_ptr<llvm::LLVMContext> TheContext;
-    unique_ptr<llvm::Module> TheModule;
+    unique_ptr<llvm::LLVMContext> Context;
     unique_ptr<llvm::IRBuilder<>> Builder;
 
 public:
+    unique_ptr<llvm::Module> TheModule;
+
     SemanticVisitor() {
         symbol_table = new SymbolTable();
         return_found = false;
         is_function_call = false;
         func_arg_dims = 0;
 
-        TheContext = make_unique<llvm::LLVMContext>();
-        TheModule = make_unique<llvm::Module>("module", *TheContext);
-        Builder = make_unique<llvm::IRBuilder<>>(*TheContext);
+        Context = make_unique<llvm::LLVMContext>();
+        TheModule = make_unique<llvm::Module>("MiniC", *Context);
+        Builder = make_unique<llvm::IRBuilder<>>(*Context);
     }
 
     virtual llvm::Value* visit(ASTProg &node)
@@ -200,6 +201,16 @@ public:
     virtual llvm::Value* visit(ASTExpr &node)
     {
         return nullptr;
+    }
+
+    virtual llvm::Value* visit(ASTExprInt &node)
+    {
+        return llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), node.intlit, true);
+    }
+
+    virtual llvm::Value* visit(ASTExprFloat &node)
+    {
+        return llvm::ConstantFP::get(llvm::Type::getFloatTy(*Context), node.floatlit);
     }
 
     virtual llvm::Value* visit(ASTExprUnary &node)

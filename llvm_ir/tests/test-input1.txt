@@ -3,6 +3,7 @@ func void comb(int arr[]) {
 }
 
 func int main() {
+    float a = 1.0;
     int arr[2];
     comb(arr);
     return 0;
