@@ -230,7 +230,7 @@ public:
 
     virtual llvm::Value* visit(ASTExprUnary &node)
     {
-        (node.exp)->accept(*this);
+        llvm::Value *operand = (node.exp)->accept(*this);
         if(node.unary_op == "+" || node.unary_op == "-")
         {
             node.node_type = (node.exp)->node_type;
@@ -243,6 +243,10 @@ public:
             if((node.exp)->node_type != BOOL)
                 error("Invalid unary operation");
         }
+
+        if(node.unary_op == "+") return Builder->CreateAdd(operand, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), 0), "positive");
+        if(node.unary_op == "-") return Builder->CreateNeg(operand, "negate");
+        if(node.unary_op == "!") return Builder->CreateNot(operand, "not");
 
         return nullptr;
     }
