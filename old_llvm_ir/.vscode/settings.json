@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "new": "cpp",
-        "*.inc": "cpp",
-        "*.tcc": "cpp",
-        "mutex": "cpp",
-        "thread": "cpp"
-    }
-}

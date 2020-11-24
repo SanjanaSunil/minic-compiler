@@ -18,6 +18,8 @@
 #include "ExprBuildASTVisitor.h"
 
 #include "SemanticVisitor.h"
+
+#include "IRTable.h"
 #include "IRVisitor.h"
 //#include "ast.h"
 

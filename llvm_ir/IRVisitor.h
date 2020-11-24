@@ -1,22 +1,21 @@
-//#include "ast.h"
 #include <iostream>
-// #include "SymbolTable.h"
+
 using namespace std;
 
 class IRVisitor : public ASTvisitor
 {
-    SymbolTable *symbol_table;
+    IRTable *symbol_table;
     unique_ptr<llvm::LLVMContext> Context;
     unique_ptr<llvm::IRBuilder<>> Builder;
 
-    llvm::Value *ret_ir;
+    llvm::Value *ir_ret;
 
 public:
     unique_ptr<llvm::Module> Module;
 
     IRVisitor() {
-        symbol_table = new SymbolTable();
-        ret_ir = nullptr;
+        symbol_table = new IRTable();
+        ir_ret = nullptr;
 
         Context = make_unique<llvm::LLVMContext>();
         Module = make_unique<llvm::Module>("MiniC", *Context);
@@ -26,7 +25,7 @@ public:
     /* CHANGE - remove function scope */
     virtual void visit(ASTProg &node)
     {
-        symbol_table->addBlockScope();
+        symbol_table->addScope();
 
         for (auto progStat : node.progStatList)
             progStat->accept(*this);
@@ -67,9 +66,9 @@ public:
 
             int dims = 0;
             if(varDecl->var) dims = varDecl->var->getDimensions();
-            symbol_table->addVariableToCurrentScope(varDecl->getId(), node.lit_type, dims);
 
             // Change this to reflect all types, not just int. Take care of arrays as well.
+            // Change to include assignment 
             if(symbol_table->isGlobal())
             {
                 auto ir_val = new llvm::GlobalVariable(*Module, 
@@ -78,7 +77,31 @@ public:
                                                         llvm::GlobalValue::CommonLinkage, 
                                                         NULL, 
                                                         varDecl->getId());
+
+                symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
+
+                if(varDecl->var_assign)
+                {
+                    llvm::Value* lhs_val = symbol_table->getVal(varDecl->getId());
+                    ir_val->setInitializer((llvm::Constant*) ir_ret);
+                }
             }
+            else
+            {
+                llvm::Function *parent = Builder->GetInsertBlock()->getParent();
+                llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(llvm::Type::getInt32Ty(*Context), 
+                                                                      nullptr, 
+                                                                      varDecl->getId());
+
+                symbol_table->addVariableToCurrentScope(varDecl->getId(), alloca_inst);
+
+                if(varDecl->var_assign)
+                {
+                    llvm::Value* lhs_val = symbol_table->getVal(varDecl->getId());
+                    Builder->CreateStore(ir_ret, lhs_val);
+                }
+            }
+
         }
     }
 
@@ -88,9 +111,9 @@ public:
         if(node.var_assign) (node.var_assign)->accept(*this);
     }
 
+    // Add to symbol table??
     virtual void visit(ASTFuncArg &node)
     {
-        symbol_table->addVariableToCurrentScope(node.id, node.lit_type, node.dimension);
     }
 
     // CHANGE - change function return types, check last line, check arguments
@@ -103,8 +126,8 @@ public:
             args.push_back(funcArg->lit_type);
             dims.push_back(funcArg->dimension);
         }
-        symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args, dims);
-        symbol_table->addFunctionScope(node.lit_type);
+        // symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args, dims);
+        symbol_table->addScope();
 
         // CHANGE
         vector<llvm::Type*> param_types;
@@ -143,43 +166,81 @@ public:
 
     }
 
+    // Change for long and unsigned
     virtual void visit(ASTExprInt &node)
     {
+        ir_ret = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), node.intlit, true);
     }
 
     virtual void visit(ASTExprFloat &node)
     {
+        ir_ret = llvm::ConstantFP::get(llvm::Type::getFloatTy(*Context), node.floatlit);
     }
 
     virtual void visit(ASTExprChar &node)
     {
+        ir_ret = llvm::ConstantInt::get(llvm::Type::getInt8Ty(*Context), node.charlit);
     }
 
     virtual void visit(ASTExprBool &node)
     {
+        ir_ret = llvm::ConstantInt::get(llvm::Type::getInt1Ty(*Context), node.boollit);
     }
 
     virtual void visit(ASTExprString &node)
     {
+        ir_ret = Builder->CreateGlobalStringPtr(node.stringlit);
     }
 
+    // CHANGE - FOR FLOAT etc
     virtual void visit(ASTExprUnary &node)
     {
+        (node.exp)->accept(*this);
+        llvm::Value *operand = ir_ret;
 
+        if(node.unary_op == "+") ir_ret = Builder->CreateAdd(operand, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), 0), "positive");
+        if(node.unary_op == "-") ir_ret = Builder->CreateNeg(operand, "negate");
+        if(node.unary_op == "!") ir_ret = Builder->CreateNot(operand, "not");
     }
 
     virtual void visit(ASTExprBinary &node)
     {
+        llvm::Value *l;
+        (node.left)->accept(*this);
+        l = ir_ret;
 
+        llvm::Value *r;
+        (node.right)->accept(*this);
+        r = ir_ret;
      
+        string bin_op = node.bin_operator;
+
+        if(bin_op == "+") ir_ret =  Builder->CreateAdd(l, r, "add");
+        if(bin_op == "-") ir_ret = Builder->CreateSub(l, r, "sub");
+        if(bin_op == "*") ir_ret = Builder->CreateMul(l, r, "mul");
+        if(bin_op == "/") ir_ret = Builder->CreateSDiv(l, r, "div");
+        if(bin_op == "%") ir_ret = Builder->CreateSRem(l, r, "mod");
+        
+        if(bin_op == "<") ir_ret = Builder->CreateICmpSLT(l, r, "lt");
+        if(bin_op == "<=") ir_ret = Builder->CreateICmpSLE(l, r, "le");
+        if(bin_op == ">") ir_ret = Builder->CreateICmpSGT(l, r, "gt");
+        if(bin_op == ">=") ir_ret = Builder->CreateICmpSGE(l, r, "ge");
+        if(bin_op == "==") ir_ret = Builder->CreateICmpEQ(l, r, "eq");
+        if(bin_op == "!=") ir_ret = Builder->CreateICmpNE(l, r, "uneq");
+        
+        if(bin_op == "&&") ir_ret = Builder->CreateAnd(l, r, "and");
+        if(bin_op == "||") ir_ret = Builder->CreateOr(l, r, "or");
     }
 
     virtual void visit(ASTExprTernary &node)
     {
     }
 
+    // CHANGE to check for array
     virtual void visit(ASTExprVar &node)
     {
+        (node.var)->accept(*this);
+        ir_ret = symbol_table->getVal((node.var)->id);
     }
 
     virtual void visit(ASTExprFuncCall &node)
@@ -187,19 +248,24 @@ public:
 
     }
 
+    // CHANGE - change type?
     virtual void visit(ASTStatVarAssign &node)
     {
-
+        (node.exp)->accept(*this);
+        llvm::Value* lhs_val = symbol_table->getVal((node.var)->id);
+        Builder->CreateStore(ir_ret, lhs_val);
     }
 
     virtual void visit(ASTStatVarDecl &node)
     {
-
+        (node.var_decl)->accept(*this);
     }
 
     virtual void visit(ASTStatBlock &node)
     {
-
+        symbol_table->addScope();
+        (node.block)->accept(*this);
+        symbol_table->removeScope();
     }
 
     virtual void visit(ASTStatFuncCall &node)
