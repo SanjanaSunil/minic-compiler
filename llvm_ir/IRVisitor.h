@@ -74,12 +74,13 @@ public:
                 auto ir_val = new llvm::GlobalVariable(*Module, 
                                                         llvm::Type::getInt32Ty(*Context), 
                                                         false,
-                                                        llvm::GlobalValue::CommonLinkage, 
+                                                        llvm::GlobalValue::PrivateLinkage, 
                                                         NULL, 
                                                         varDecl->getId());
 
                 symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
 
+                ir_val->setInitializer(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), 0, true));
                 if(varDecl->var_assign)
                 {
                     llvm::Value* lhs_val = symbol_table->getVal(varDecl->getId());
@@ -140,7 +141,7 @@ public:
         // CHANGE
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(*Context), param_types, false);
         llvm::Function *func = llvm::Function::Create(ft, 
-                                                      llvm::GlobalValue::LinkageTypes::CommonLinkage, 
+                                                      llvm::GlobalValue::LinkageTypes::ExternalLinkage, 
                                                       node.id, 
                                                       *Module);
         
@@ -158,7 +159,15 @@ public:
 
     virtual void visit(ASTFuncCall &node)
     {
+        llvm::Function *CalleeF = Module->getFunction(node.id);
+        vector<llvm::Value*> ArgsV;
+        for (unsigned i = 0, e = node.funcArgList.size(); i != e; ++i) {
+            node.funcArgList[i]->accept(*this);
+            ArgsV.push_back(ir_ret);
+        }
 
+        if(CalleeF->getReturnType()->isVoidTy()) ir_ret = Builder->CreateCall(CalleeF, ArgsV);
+        else ir_ret = Builder->CreateCall(CalleeF, ArgsV, node.id);
     }
 
     virtual void visit(ASTExpr &node)
@@ -241,11 +250,12 @@ public:
     {
         (node.var)->accept(*this);
         ir_ret = symbol_table->getVal((node.var)->id);
+        ir_ret = Builder->CreateLoad(ir_ret);
     }
 
     virtual void visit(ASTExprFuncCall &node)
     {
-
+        (node.func_call)->accept(*this);
     }
 
     // CHANGE - change type?
@@ -270,7 +280,7 @@ public:
 
     virtual void visit(ASTStatFuncCall &node)
     {
-
+        (node.func_call)->accept(*this);
     }
 
     virtual void visit(ASTStatReturn &node)

@@ -1,0 +1,19 @@
+; ModuleID = 'MiniC'
+source_filename = "MiniC"
+
+@a = private global i32 1
+
+define void @trial() {
+entry:
+  ret void
+}
+
+define void @main() {
+entry:
+  %0 = load i32, i32* @a, align 4
+  %add = add i32 1, %0
+  %c = alloca i32, align 4
+  store i32 %add, i32* %c, align 4
+  call void @trial()
+  ret void
+}

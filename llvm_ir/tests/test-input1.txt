@@ -1,8 +1,11 @@
 int a = 1;
 
-func int trial(int x) {
-    int b = 2;
-    int c = 1;
-    c = 1 + b;
+func void trial() {
+
+}
+
+func int main() {
+    int c = 1 + a;
+    trial();
     return 1;
 }
