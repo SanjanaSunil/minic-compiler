@@ -1,10 +1,6 @@
-func void comb(int arr[]) {
+int a = 1, b = 2;
 
-}
-
-func int main() {
-    int a = 103 + 2;
-    int arr[2];
-    comb(arr);
-    return 0;
+func int trial(int x) {
+    int c = 2;
+    return 1;
 }

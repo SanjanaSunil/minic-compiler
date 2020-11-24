@@ -233,8 +233,4 @@ public:
         scopes.pop_back();
         delete recent_scope;
     }
-
-    bool isGlobal() {
-        return (scopes.size() == 1);
-    }
 };

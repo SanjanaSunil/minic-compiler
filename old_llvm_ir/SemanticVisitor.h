@@ -1,6 +1,7 @@
 //#include "ast.h"
 #include <iostream>
 #include "SymbolTable.h"
+
 using namespace std;
 
 class SemanticVisitor : public ASTvisitor
@@ -10,42 +11,57 @@ class SemanticVisitor : public ASTvisitor
     bool is_function_call;
     SymbolTable *symbol_table;
 
+    unique_ptr<llvm::LLVMContext> Context;
+    unique_ptr<llvm::IRBuilder<>> Builder;
+
 public:
+    unique_ptr<llvm::Module> TheModule;
+
     SemanticVisitor() {
         symbol_table = new SymbolTable();
         return_found = false;
         is_function_call = false;
         func_arg_dims = 0;
+
+        Context = make_unique<llvm::LLVMContext>();
+        TheModule = make_unique<llvm::Module>("MiniC", *Context);
+        Builder = make_unique<llvm::IRBuilder<>>(*Context);
     }
 
-    virtual void visit(ASTProg &node)
+    virtual llvm::Value* visit(ASTProg &node)
     {
         symbol_table->addBlockScope();
         for (auto progStat : node.progStatList)
             progStat->accept(*this);
         
         symbol_table->removeScope();
+    
+        return nullptr;
     }
 
     // Add to symbol table
     // Change None type
-    virtual void visit(ASTProgStat &node)
+    virtual llvm::Value* visit(ASTProgStat &node)
     {
         if(node.var_decl) (node.var_decl)->accept(*this);
         if(node.func_decl) (node.func_decl)->accept(*this);
+
+        return nullptr;
     }
 
     // Add new scope
-    virtual void visit(ASTBlockStat &node)
+    virtual llvm::Value* visit(ASTBlockStat &node)
     {
         for(auto stat : node.statementList)
             stat->accept(*this);
+
+        return nullptr;
     }
 
     // Check if exists in symbol table and get type and whether it is array
     // However this can be part of declaration as well, so don't check here?
     // Check if param1 and param2 is positive int if it is not null
-    virtual void visit(ASTVariable &node)
+    virtual llvm::Value* visit(ASTVariable &node)
     {
         if(node.param1) 
         {
@@ -59,17 +75,28 @@ public:
         }
 
         node.node_type = symbol_table->getType(node.id);
+
+        // PUT IN NEXT ALSO
+        if(symbol_table->scopes.size() == 1)
+            auto ir_val = new llvm::GlobalVariable(*TheModule, 
+                                                    llvm::Type::getInt32Ty(*Context), 
+                                                    false,  llvm::GlobalValue::CommonLinkage, 
+                                                    NULL, 
+                                                    node.id);
+        return nullptr;
     }
 
-    virtual void visit(ASTVariableAssign &node)
+    virtual llvm::Value* visit(ASTVariableAssign &node)
     {
         (node.exp)->accept(*this);
         node.node_type = (node.exp)->node_type;
+
+        return nullptr;
     }
 
     // Check if each in vector is either of type none or specified type
     // Add to symbol table
-    virtual void visit(ASTVariableDecl &node)
+    virtual llvm::Value* visit(ASTVariableDecl &node)
     {
         node.node_type = getNodeType(node.lit_type);
         for(auto varDecl : node.varList)
@@ -85,9 +112,11 @@ public:
             if(varDecl->var) dims = varDecl->var->getDimensions();
             symbol_table->addVariableToCurrentScope(varDecl->getId(), node.lit_type, dims);
         }
+
+        return nullptr;
     }
 
-    virtual void visit(ASTVariableDeclType &node)
+    virtual llvm::Value* visit(ASTVariableDeclType &node)
     {
         if(node.var) (node.var)->accept(*this);
         if(node.var_assign) 
@@ -95,17 +124,21 @@ public:
             (node.var_assign)->accept(*this);
             node.node_type = (node.var_assign)->node_type;
         }
+
+        return nullptr;
     }
 
     // Add to symbol table along with dimension
-    virtual void visit(ASTFuncArg &node)
+    virtual llvm::Value* visit(ASTFuncArg &node)
     {
         symbol_table->addVariableToCurrentScope(node.id, node.lit_type, node.dimension);
         node.node_type = getNodeType(node.lit_type);
+
+        return nullptr;
     }
 
     // Add to symbol table
-    virtual void visit(ASTFuncDecl &node)
+    virtual llvm::Value* visit(ASTFuncDecl &node)
     {
         return_found = false;
 
@@ -135,10 +168,11 @@ public:
             error("Return statement not found");
 
         symbol_table->removeScope();
+        return nullptr;
     }
 
     // Check symbol table, check if arguments are correct in number and type
-    virtual void visit(ASTFuncCall &node)
+    virtual llvm::Value* visit(ASTFuncCall &node)
     {
         vector<NodeType> args;
         vector<int> dims;
@@ -158,7 +192,7 @@ public:
         if(node.id == "input" || node.id == "print")
         {
             node.node_type = NONE;
-            return;
+            return nullptr;
         }
 
         if(!symbol_table->isValidFunctionCall(node.id, args, dims))
@@ -166,17 +200,44 @@ public:
         
         node.node_type = symbol_table->getType(node.id);
         is_function_call = false;
+
+        return nullptr;
     }
 
     // Assign type to whatever type the variable is
-    virtual void visit(ASTExpr &node)
+    virtual llvm::Value* visit(ASTExpr &node)
     {
-        return;
+        return nullptr;
     }
 
-    virtual void visit(ASTExprUnary &node)
+    virtual llvm::Value* visit(ASTExprInt &node)
     {
-        (node.exp)->accept(*this);
+        return llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), node.intlit, true);
+    }
+
+    virtual llvm::Value* visit(ASTExprFloat &node)
+    {
+        return llvm::ConstantFP::get(llvm::Type::getFloatTy(*Context), node.floatlit);
+    }
+
+    virtual llvm::Value* visit(ASTExprChar &node)
+    {
+        return llvm::ConstantInt::get(llvm::Type::getInt8Ty(*Context), node.charlit);
+    }
+
+    virtual llvm::Value* visit(ASTExprBool &node)
+    {
+        return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*Context), node.boollit);
+    }
+
+    virtual llvm::Value* visit(ASTExprString &node)
+    {
+        return Builder->CreateGlobalStringPtr(node.stringlit);
+    }
+
+    virtual llvm::Value* visit(ASTExprUnary &node)
+    {
+        llvm::Value *operand = (node.exp)->accept(*this);
         if(node.unary_op == "+" || node.unary_op == "-")
         {
             node.node_type = (node.exp)->node_type;
@@ -189,12 +250,20 @@ public:
             if((node.exp)->node_type != BOOL)
                 error("Invalid unary operation");
         }
+
+        if(node.unary_op == "+") return Builder->CreateAdd(operand, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), 0), "positive");
+        if(node.unary_op == "-") return Builder->CreateNeg(operand, "negate");
+        if(node.unary_op == "!") return Builder->CreateNot(operand, "not");
+
+        return nullptr;
     }
 
-    virtual void visit(ASTExprBinary &node)
+    virtual llvm::Value* visit(ASTExprBinary &node)
     {
-        (node.left)->accept(*this);
-        (node.right)->accept(*this);
+        llvm::Value *l = (node.left)->accept(*this);
+        llvm::Value *r = (node.right)->accept(*this);
+
+        // l->print(llvm::errs(), true);
 
         string bin_op = node.bin_operator;
         NodeType left_type = (node.left)->node_type;
@@ -215,10 +284,28 @@ public:
             node.node_type = left_type;
             if(bin_op == "<" || bin_op == ">" || bin_op == "<=" || bin_op == ">=")
                 node.node_type = BOOL;
-        }        
+        }  
+
+        if(bin_op == "+") return Builder->CreateAdd(l, r, "addition");
+        if(bin_op == "-") return Builder->CreateSub(l, r, "subtraction");
+        if(bin_op == "*") return Builder->CreateMul(l, r, "multiplication");
+        if(bin_op == "/") return Builder->CreateSDiv(l, r, "division");
+        if(bin_op == "%") return Builder->CreateSRem(l, r, "mod");
+        
+        if(bin_op == "<") return Builder->CreateICmpSLT(l, r, "lt");
+        if(bin_op == "<=") return Builder->CreateICmpSLE(l, r, "le");
+        if(bin_op == ">") return Builder->CreateICmpSGT(l, r, "gt");
+        if(bin_op == ">=") return Builder->CreateICmpSGE(l, r, "ge");
+        if(bin_op == "==") return Builder->CreateICmpEQ(l, r, "equal");
+        if(bin_op == "!=") return Builder->CreateICmpNE(l, r, "unequal");
+        
+        if(bin_op == "&&") return Builder->CreateAnd(l, r, "and");
+        if(bin_op == "||") return Builder->CreateOr(l, r, "or");
+
+        return nullptr;      
     }
 
-    virtual void visit(ASTExprTernary &node)
+    virtual llvm::Value* visit(ASTExprTernary &node)
     {
         (node.first)->accept(*this);
         (node.second)->accept(*this);
@@ -231,10 +318,12 @@ public:
             error("Incompatible ternary returns");
 
         node.node_type = (node.second)->node_type;
+
+        return nullptr;
     }
 
     // Set node type acc to symbol table
-    virtual void visit(ASTExprVar &node)
+    virtual llvm::Value* visit(ASTExprVar &node)
     {
         (node.var)->accept(*this);
         node.node_type = (node.var)->node_type;
@@ -258,17 +347,20 @@ public:
             int actual_dimension = dimensions;
             func_arg_dims = actual_dimension - call_dimension;
         }
+        return nullptr;
     }
 
     // Set node type acc to symbol table
-    virtual void visit(ASTExprFuncCall &node)
+    virtual llvm::Value* visit(ASTExprFuncCall &node)
     {
         (node.func_call)->accept(*this);
         node.node_type = (node.func_call)->node_type;
+
+        return nullptr;
     }
 
     // Check if can be assigned properly
-    virtual void visit(ASTStatVarAssign &node)
+    virtual llvm::Value* visit(ASTStatVarAssign &node)
     {
         (node.exp)->accept(*this);
         node.node_type = (node.exp)->node_type;
@@ -278,31 +370,39 @@ public:
 
         if(symbol_table->getType((node.var)->id) != node.node_type)
             error("Invalid assignment");
+
+        return nullptr;
     }
 
-    virtual void visit(ASTStatVarDecl &node)
+    virtual llvm::Value* visit(ASTStatVarDecl &node)
     {
         (node.var_decl)->accept(*this);
         node.node_type = (node.var_decl)->node_type;
+
+        return nullptr;
     }
 
     // Create new scope
-    virtual void visit(ASTStatBlock &node)
+    virtual llvm::Value* visit(ASTStatBlock &node)
     {
         symbol_table->addBlockScope();
         (node.block)->accept(*this);
         symbol_table->removeScope();
+
+        return nullptr;
     }
 
     // Nothing to do here since it will already check
-    virtual void visit(ASTStatFuncCall &node)
+    virtual llvm::Value* visit(ASTStatFuncCall &node)
     {
         (node.func_call)->accept(*this);
         node.node_type = (node.func_call)->node_type;
+
+        return nullptr;
     }
 
     // Check if currect return type, if in function
-    virtual void visit(ASTStatReturn &node)
+    virtual llvm::Value* visit(ASTStatReturn &node)
     {
         return_found = true;
 
@@ -318,16 +418,20 @@ public:
         
         if(node.node_type != symbol_table->getCurrentReturnType())
             error("Invalid return type");
+
+        return nullptr;
     }
 
     // Check if in loop or function
-    virtual void visit(ASTStatLoopControl &node)
+    virtual llvm::Value* visit(ASTStatLoopControl &node)
     {
         if(!symbol_table->scopeTypeExists(Loop))
             error("Invalid " + node.control_stat + " statement");
+
+        return nullptr;
     }
 
-    virtual void visit(ASTStatWhile &node)
+    virtual llvm::Value* visit(ASTStatWhile &node)
     {
         (node.exp)->accept(*this);
         if((node.exp)->node_type != INT && (node.exp)->node_type != BOOL)
@@ -336,9 +440,11 @@ public:
         symbol_table->addLoopScope();
         (node.block)->accept(*this);
         symbol_table->removeScope();
+
+        return nullptr;
     }
 
-    virtual void visit(ASTStatIf &node)
+    virtual llvm::Value* visit(ASTStatIf &node)
     {
         for(auto exp : node.exprList)
         {
@@ -353,9 +459,11 @@ public:
             block->accept(*this);
             symbol_table->removeScope();
         }
+
+        return nullptr;
     }
 
-    virtual void visit(ASTStatFor &node) {
+    virtual llvm::Value* visit(ASTStatFor &node) {
         symbol_table->addBlockScope();
 
         if(node.var_decl) (node.var_decl)->accept(*this);
@@ -393,6 +501,8 @@ public:
 
         (node.block)->accept(*this);
         symbol_table->removeScope();
+
+        return nullptr;
     }
     
 };

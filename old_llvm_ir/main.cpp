@@ -18,7 +18,6 @@
 #include "ExprBuildASTVisitor.h"
 
 #include "SemanticVisitor.h"
-#include "IRVisitor.h"
 //#include "ast.h"
 
 using namespace std;
@@ -45,9 +44,7 @@ int main(int argc, const char* argv[]) {
     SemanticVisitor *sv = new SemanticVisitor();
     sv->visit(*program_root);
 
-    IRVisitor *iv = new IRVisitor();
-    iv->visit(*program_root);
-    iv->Module->print(llvm::errs(), nullptr);
+    sv->TheModule->print(llvm::errs(), nullptr);
     
     return 0;
 }
