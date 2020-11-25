@@ -64,7 +64,7 @@ statement: varDecl                          #statVarDecl
          | 'break' ';'                      #statBreak
          | 'continue' ';'                   #statContinue
          | 'while' '(' expr ')' block       #statWhile
-         | 'if' '(' expr ')' block ('elif' '(' expr ')' block)* ('else' block)?     #statIf
+         | 'if' '(' expr ')' block ('else' block)?     #statIf
          | 'for' '(' (varDecl | initvar=variable '=' initexpr=expr ';')? (condexpr=expr)? ';' (loopvar=variable '=' loopexpr=expr)? ')' block    #statFor
          ;
 

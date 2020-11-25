@@ -5,8 +5,13 @@ func void trial(int r) {
 }
 
 func int main() {
-    int c = 1 + 1;
-    trial(c);
-    puts("print\n\n\n");
+    if(false)
+    {
+        puts("YO");
+    }
+    else
+    {
+        puts("sdfjn");
+    }
     return 1;
 }

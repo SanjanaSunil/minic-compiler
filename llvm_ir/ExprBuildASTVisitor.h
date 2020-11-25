@@ -507,13 +507,10 @@ public:
         ASTStatIf *node = new ASTStatIf();
 
         ASTExpr *exprNode;
-        for (auto expr : context->expr())
+        exprNode = visit(context->expr());
+        if (exprNode != nullptr)
         {
-            exprNode = visit(expr);
-            if (exprNode != nullptr)
-            {
-                node->exprList.push_back(exprNode);
-            }
+            node->exprList.push_back(exprNode);
         }
 
         ASTBlockStat *blockNode;

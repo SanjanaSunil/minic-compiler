@@ -330,7 +330,7 @@ public:
     virtual void visit(ASTStatWhile &node)
     {
         (node.exp)->accept(*this);
-        if((node.exp)->node_type != INT && (node.exp)->node_type != BOOL)
+        if((node.exp)->node_type != BOOL)
             error("Invalid loop condition");
 
         symbol_table->addLoopScope();
@@ -343,7 +343,7 @@ public:
         for(auto exp : node.exprList)
         {
             exp->accept(*this);
-            if(exp->node_type != INT && exp->node_type != BOOL)
+            if(exp->node_type != BOOL)
                 error("Invalid if condition");
         }
 

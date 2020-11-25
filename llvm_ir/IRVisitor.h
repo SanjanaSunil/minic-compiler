@@ -2,6 +2,11 @@
 
 using namespace std;
 
+extern "C" double printd(float X) {
+  fprintf(stderr, "%f\n", X);
+  return 0;
+}
+
 class IRVisitor : public ASTvisitor
 {
     IRTable *symbol_table;
@@ -342,9 +347,41 @@ public:
 
     }
 
+    // CHANGE to accomodate for no else part and return in if
     virtual void visit(ASTStatIf &node)
     {
+        (node.exprList[0])->accept(*this);
+        llvm::Value* CondV = ir_ret;
+        llvm::Function *TheFunction = Builder->GetInsertBlock()->getParent();
 
+        llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(*Context, "then", TheFunction);
+        llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(*Context, "else");
+        llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(*Context, "ifcont");
+
+        Builder->CreateCondBr(CondV, ThenBB, ElseBB);
+
+        Builder->SetInsertPoint(ThenBB);
+        (node.blockList[0])->accept(*this);
+        llvm::Value *ThenV = ir_ret;
+
+        Builder->CreateBr(MergeBB);
+        ThenBB = Builder->GetInsertBlock();
+
+        TheFunction->getBasicBlockList().push_back(ElseBB);
+        Builder->SetInsertPoint(ElseBB);
+        (node.blockList[1])->accept(*this);
+        llvm::Value *ElseV = ir_ret;
+
+        Builder->CreateBr(MergeBB);
+        ElseBB = Builder->GetInsertBlock();
+
+        TheFunction->getBasicBlockList().push_back(MergeBB);
+        Builder->SetInsertPoint(MergeBB);
+        llvm::PHINode *PN = Builder->CreatePHI(ThenV->getType(), 2, "iftmp");
+
+        PN->addIncoming(ThenV, ThenBB);
+        PN->addIncoming(ElseV, ElseBB);
+        ir_ret = PN;
     }
 
     virtual void visit(ASTStatFor &node) {
