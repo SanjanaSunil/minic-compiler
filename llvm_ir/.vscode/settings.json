@@ -5,6 +5,7 @@
         "*.inc": "cpp",
         "*.tcc": "cpp",
         "mutex": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "istream": "cpp"
     }
 }

@@ -1,19 +1,18 @@
 ; ModuleID = 'MiniC'
 source_filename = "MiniC"
 
-@a = private global i32 1
+@a = private global float 0x3FF19999A0000000
 
-define void @trial() {
+define void @trial(i32 %0) {
 entry:
   ret void
 }
 
-define void @main() {
+define i32 @main() {
 entry:
-  %0 = load i32, i32* @a, align 4
-  %add = add i32 1, %0
   %c = alloca i32, align 4
-  store i32 %add, i32* %c, align 4
-  call void @trial()
+  store i32 2, i32* %c, align 4
+  %0 = load i32, i32* %c, align 4
+  call void @trial(i32 %0)
   ret void
 }

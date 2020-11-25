@@ -37,7 +37,7 @@ functionDecl: 'func' functype=(TYPE | 'void') ID '(' (functionArgument)? (',' fu
 functionCall: ID '(' (expr)? (',' expr)* ')'        #funcCall
             ;
 
-expr: op=('+' | '-') expr                       #exprUnary
+expr: op='-' expr                               #exprUnary
     | op='!' expr                               #exprNot
     | expr op=('/' | '*' | '%') expr            #exprDivMulMod
     | expr op=('+' | '-') expr                  #exprAddSub
@@ -70,7 +70,7 @@ statement: varDecl                          #statVarDecl
 
 /*Tokens*/
 
-TYPE : ('uint' | 'int' | 'long' | 'float' | 'bool' | 'char' | 'string') ;
+TYPE : ('uint' | 'int' | 'long' | 'float' | 'bool' | 'char') ;
 
 INT : ([1-9][0-9]* | [0]) ;
 FLOAT : ([0-9]+ '.' [0-9]+) ;

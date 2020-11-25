@@ -22,7 +22,17 @@ public:
         Builder = make_unique<llvm::IRBuilder<>>(*Context);
     }
 
-    /* CHANGE - remove function scope */
+    llvm::Type *getLLVMType(NodeType ty) { 
+        switch (ty) {
+            case NONE: return Builder->getVoidTy();
+            case INT: return Builder->getInt32Ty();
+            case FLOAT: return Builder->getFloatTy();
+            case BOOL: return Builder->getInt1Ty();
+            case CHAR: return Builder->getInt8PtrTy();
+            default: return Builder->getInt32Ty();
+        } 
+    }
+
     virtual void visit(ASTProg &node)
     {
         symbol_table->addScope();
@@ -72,7 +82,7 @@ public:
             if(symbol_table->isGlobal())
             {
                 auto ir_val = new llvm::GlobalVariable(*Module, 
-                                                        llvm::Type::getInt32Ty(*Context), 
+                                                        getLLVMType(node.node_type), 
                                                         false,
                                                         llvm::GlobalValue::PrivateLinkage, 
                                                         NULL, 
@@ -80,7 +90,8 @@ public:
 
                 symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
 
-                ir_val->setInitializer(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), 0, true));
+                if(node.node_type == INT)
+                    ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
                 if(varDecl->var_assign)
                 {
                     llvm::Value* lhs_val = symbol_table->getVal(varDecl->getId());
@@ -90,7 +101,7 @@ public:
             else
             {
                 llvm::Function *parent = Builder->GetInsertBlock()->getParent();
-                llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(llvm::Type::getInt32Ty(*Context), 
+                llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(getLLVMType(node.node_type), 
                                                                       nullptr, 
                                                                       varDecl->getId());
 
@@ -135,11 +146,11 @@ public:
         for(auto funcArg : node.funcArgList) 
         {
             funcArg->accept(*this);
-            param_types.push_back(llvm::Type::getInt32Ty(*Context));
+            param_types.push_back(getLLVMType(funcArg->node_type));
         }
 
         // CHANGE
-        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(*Context), param_types, false);
+        llvm::FunctionType *ft = llvm::FunctionType::get(getLLVMType(node.node_type), param_types, false);
         llvm::Function *func = llvm::Function::Create(ft, 
                                                       llvm::GlobalValue::LinkageTypes::ExternalLinkage, 
                                                       node.id, 
@@ -178,22 +189,22 @@ public:
     // Change for long and unsigned
     virtual void visit(ASTExprInt &node)
     {
-        ir_ret = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), node.intlit, true);
+        ir_ret = llvm::ConstantInt::get(getLLVMType(INT), node.intlit, true);
     }
 
     virtual void visit(ASTExprFloat &node)
     {
-        ir_ret = llvm::ConstantFP::get(llvm::Type::getFloatTy(*Context), node.floatlit);
+        ir_ret = llvm::ConstantFP::get(getLLVMType(FLOAT), node.floatlit);
     }
 
     virtual void visit(ASTExprChar &node)
     {
-        ir_ret = llvm::ConstantInt::get(llvm::Type::getInt8Ty(*Context), node.charlit);
+        ir_ret = llvm::ConstantInt::get(getLLVMType(CHAR), node.charlit);
     }
 
     virtual void visit(ASTExprBool &node)
     {
-        ir_ret = llvm::ConstantInt::get(llvm::Type::getInt1Ty(*Context), node.boollit);
+        ir_ret = llvm::ConstantInt::get(getLLVMType(BOOL), node.boollit);
     }
 
     virtual void visit(ASTExprString &node)
@@ -207,7 +218,6 @@ public:
         (node.exp)->accept(*this);
         llvm::Value *operand = ir_ret;
 
-        if(node.unary_op == "+") ir_ret = Builder->CreateAdd(operand, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*Context), 0), "positive");
         if(node.unary_op == "-") ir_ret = Builder->CreateNeg(operand, "negate");
         if(node.unary_op == "!") ir_ret = Builder->CreateNot(operand, "not");
     }

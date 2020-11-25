@@ -10,7 +10,6 @@ NodeType getNodeType(string lit_type) {
     else if(lit_type == "float") return FLOAT;
     else if(lit_type == "char") return CHAR;
     else if(lit_type == "bool") return BOOL;
-    else if(lit_type == "string") return STRING;
     return NONE;
 }
 

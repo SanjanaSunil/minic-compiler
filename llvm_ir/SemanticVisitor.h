@@ -177,7 +177,7 @@ public:
     virtual void visit(ASTExprUnary &node)
     {
         (node.exp)->accept(*this);
-        if(node.unary_op == "+" || node.unary_op == "-")
+        if(node.unary_op == "-")
         {
             node.node_type = (node.exp)->node_type;
             if((node.exp)->node_type != INT && (node.exp)->node_type != FLOAT)
@@ -200,7 +200,7 @@ public:
         NodeType left_type = (node.left)->node_type;
         NodeType right_type = (node.right)->node_type;
 
-        if(left_type != right_type || left_type == CHAR || left_type == STRING || left_type == NONE)
+        if(left_type != right_type || left_type == CHAR || left_type == NONE)
             error("Invalid binary operation");
 
         if(bin_op == "&&" || bin_op == "||")

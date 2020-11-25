@@ -1,11 +1,11 @@
-int a = 1;
+float a = 1.1;
 
-func void trial() {
+func void trial(int r) {
 
 }
 
 func int main() {
-    int c = 1 + a;
-    trial();
+    int c = 1 + 1;
+    trial(c);
     return 1;
 }
