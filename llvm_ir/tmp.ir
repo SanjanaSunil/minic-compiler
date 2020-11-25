@@ -3,8 +3,10 @@ source_filename = "MiniC"
 
 @a = private global float 0x3FF19999A0000000
 
-define void @trial(i32 %0) {
+define void @trial(i32 %r) {
 entry:
+  %r1 = alloca i32, align 4
+  store i32 %r, i32* %r1, align 4
   ret void
 }
 

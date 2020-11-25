@@ -90,8 +90,11 @@ public:
 
                 symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
 
-                if(node.node_type == INT)
-                    ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
+                if(node.node_type == INT) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
+                else if(node.node_type == FLOAT) ir_val->setInitializer(llvm::ConstantFP::get(getLLVMType(FLOAT), 0.0));
+                else if(node.node_type == CHAR) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(CHAR), 'a'));
+                else if(node.node_type == BOOL) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(BOOL), false));
+
                 if(varDecl->var_assign)
                 {
                     llvm::Value* lhs_val = symbol_table->getVal(varDecl->getId());
@@ -123,9 +126,9 @@ public:
         if(node.var_assign) (node.var_assign)->accept(*this);
     }
 
-    // Add to symbol table??
     virtual void visit(ASTFuncArg &node)
     {
+
     }
 
     // CHANGE - change function return types, check last line, check arguments
@@ -158,6 +161,22 @@ public:
         
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(*Context, "entry", func);
         Builder->SetInsertPoint(bb);
+
+        // CHANGE to allocate arrays as welll
+        int i = 0;
+        llvm::Function::arg_iterator AI = func->arg_begin();
+        for(AI = func->arg_begin(); AI != func->arg_end(); ++AI)
+        {
+            string name = (node.funcArgList[i])->id;
+            NodeType ty = (node.funcArgList[i])->node_type;
+            
+            AI->setName(name);
+            llvm::AllocaInst *Alloca = Builder->CreateAlloca(getLLVMType(ty), nullptr, name.c_str());
+            Builder->CreateStore(static_cast<llvm::Value *>(&*AI), Alloca);
+
+            symbol_table->addVariableToCurrentScope(name, Alloca);
+            i++;
+        }
 
         (node.block)->accept(*this);
 
