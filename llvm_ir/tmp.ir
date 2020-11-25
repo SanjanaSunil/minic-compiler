@@ -2,6 +2,9 @@
 source_filename = "MiniC"
 
 @a = private global float 0x3FF19999A0000000
+@0 = private unnamed_addr constant [14 x i8] c"\22print\\n\\n\\n\22\00", align 1
+
+declare i32 @puts(i8*)
 
 define void @trial(i32 %r) {
 entry:
@@ -16,5 +19,6 @@ entry:
   store i32 2, i32* %c, align 4
   %0 = load i32, i32* %c, align 4
   call void @trial(i32 %0)
+  %puts = call i32 @puts(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @0, i32 0, i32 0))
   ret i32 1
 }

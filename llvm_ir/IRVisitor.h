@@ -35,8 +35,16 @@ public:
         } 
     }
 
+    // MAKE SURE ir_ret is being appropriately returned!!
     virtual void visit(ASTProg &node)
     {
+        vector<llvm::Type*> putsArgs;
+        putsArgs.push_back(Builder->getInt8Ty()->getPointerTo());
+        llvm::ArrayRef<llvm::Type*> argsRef(putsArgs);
+        
+        llvm::FunctionType *putsType = llvm::FunctionType::get(getLLVMType(INT), argsRef, false);
+        llvm::FunctionCallee putsFunc = Module->getOrInsertFunction("puts", putsType);
+        
         symbol_table->addScope();
 
         for (auto progStat : node.progStatList)

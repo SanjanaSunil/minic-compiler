@@ -152,10 +152,10 @@ public:
             dims.push_back(func_arg_dims);
 
             if(node.id == "input" && exp->node_type == NONE) error("Invalid input function");
-            if(node.id == "print" && exp->node_type == NONE) error("Invalid print function");
+            if(node.id == "puts" && exp->node_type == NONE) error("Invalid print function");
         }
 
-        if(node.id == "input" || node.id == "print")
+        if(node.id == "input" || node.id == "puts")
         {
             node.node_type = NONE;
             return;
