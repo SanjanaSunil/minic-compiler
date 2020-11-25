@@ -16,5 +16,5 @@ entry:
   store i32 2, i32* %c, align 4
   %0 = load i32, i32* %c, align 4
   call void @trial(i32 %0)
-  ret void
+  ret i32 1
 }

@@ -9,6 +9,7 @@ class IRVisitor : public ASTvisitor
     unique_ptr<llvm::IRBuilder<>> Builder;
 
     llvm::Value *ir_ret;
+    bool return_found;
 
 public:
     unique_ptr<llvm::Module> Module;
@@ -16,6 +17,7 @@ public:
     IRVisitor() {
         symbol_table = new IRTable();
         ir_ret = nullptr;
+        return_found = false;
 
         Context = make_unique<llvm::LLVMContext>();
         Module = make_unique<llvm::Module>("MiniC", *Context);
@@ -134,6 +136,8 @@ public:
     // CHANGE - change function return types, check last line, check arguments
     virtual void visit(ASTFuncDecl &node)
     {   
+        return_found = false;
+
         vector<string> args;
         vector<int> dims;
         for(auto funcArg : node.funcArgList)
@@ -183,7 +187,7 @@ public:
         symbol_table->removeScope();
 
         // CHANGE
-        Builder->CreateRetVoid();
+        if(!return_found) Builder->CreateRetVoid();
         
     }
 
@@ -314,7 +318,10 @@ public:
 
     virtual void visit(ASTStatReturn &node)
     {
+        return_found = true;
+        if(node.return_expr) (node.return_expr)->accept(*this);
 
+        Builder->CreateRet(ir_ret);
     }
 
     virtual void visit(ASTStatLoopControl &node)
