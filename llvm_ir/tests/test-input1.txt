@@ -6,8 +6,7 @@ func int main() {
     // float x = 2.1;
     // printf("%f", x);
 
-    int x = 2;
-    x = 3;
+    int x = 1;
     scanf("%d", x);
     printf("%d", x);
     return 0;

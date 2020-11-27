@@ -113,9 +113,7 @@ public:
             else
             {
                 llvm::Function *parent = Builder->GetInsertBlock()->getParent();
-                llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(getLLVMType(node.node_type), 
-                                                                      nullptr, 
-                                                                      varDecl->getId());
+                llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(getLLVMType(node.node_type), nullptr, varDecl->getId());
 
                 symbol_table->addVariableToCurrentScope(varDecl->getId(), alloca_inst);
 
@@ -168,7 +166,7 @@ public:
                                                       *Module);
         
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(*Context, "entry", func);
-        symbol_table->addScope(bb);
+        symbol_table->addScope();
 
         Builder->SetInsertPoint(bb);
 
@@ -209,14 +207,17 @@ public:
         llvm::Function *CalleeF = Module->getFunction(node.id);
         vector<llvm::Value*> ArgsV;
 
-        for (unsigned i = 0, e = node.funcArgList.size(); i != e; ++i) {
-            node.funcArgList[i]->accept(*this);     
+        for (unsigned i = 0, e = node.funcArgList.size(); i != e; ++i) {    
             if(node.id == "scanf" && i != 0) 
             {
                 ASTExprVar* variable = dynamic_cast<ASTExprVar*>(node.funcArgList[i]);
                 ArgsV.push_back(symbol_table->getVal(variable->var->id));
             }
-            else ArgsV.push_back(ir_ret);
+            else 
+            {
+                node.funcArgList[i]->accept(*this); 
+                ArgsV.push_back(ir_ret);
+            }
         }
 
         if(CalleeF->getReturnType()->isVoidTy()) ir_ret = Builder->CreateCall(CalleeF, ArgsV);

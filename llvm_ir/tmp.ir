@@ -11,11 +11,10 @@ declare i32 @scanf(i8*, ...)
 define i32 @main() {
 entry:
   %x = alloca i32, align 4
-  store i32 2, i32* %x, align 4
-  store i32 3, i32* %x, align 4
-  %0 = load i32, i32* %x, align 4
+  store i32 1, i32* %x, align 4
   %scanf = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @0, i32 0, i32 0), i32* %x)
-  %1 = load i32, i32* %x, align 4
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @1, i32 0, i32 0), i32 %1)
+  %x1 = alloca i32, align 4
+  %0 = load i32, i32* %x, align 4
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @1, i32 0, i32 0), i32 %0)
   ret i32 0
 }
