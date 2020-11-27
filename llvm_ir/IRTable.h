@@ -8,9 +8,12 @@ using namespace std;
 class IRScope
 {
 public:
+    llvm::BasicBlock* block;
     unordered_map<string, llvm::Value*> var_map; 
 
-    IRScope() {}
+    IRScope(llvm::BasicBlock* block) {
+        this->block = block;
+    }
     
     bool existsInScope(string id) {
         if(var_map.find(id) != var_map.end()) return true;
@@ -31,9 +34,18 @@ class IRTable
 public:
     vector<IRScope*> scopes;
 
-    void addScope() {
-        IRScope *scope = new IRScope();
+    void addScope(llvm::BasicBlock* block=nullptr) {
+        IRScope *scope = new IRScope(block);
         scopes.push_back(scope);
+    }
+
+    llvm::BasicBlock* getRecentBlock() {
+        if(scopes.size() > 0)
+        {
+            IRScope *recent_scope = scopes.back();
+            return recent_scope->block;
+        }
+        return nullptr;
     }
 
     void addVariableToCurrentScope(string id, llvm::Value* val) {

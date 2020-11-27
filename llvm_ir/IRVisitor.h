@@ -14,7 +14,6 @@ class IRVisitor : public ASTvisitor
     unique_ptr<llvm::IRBuilder<>> Builder;
 
     llvm::Value *ir_ret;
-    bool return_found;
 
 public:
     unique_ptr<llvm::Module> Module;
@@ -22,7 +21,6 @@ public:
     IRVisitor() {
         symbol_table = new IRTable();
         ir_ret = nullptr;
-        return_found = false;
 
         Context = make_unique<llvm::LLVMContext>();
         Module = make_unique<llvm::Module>("MiniC", *Context);
@@ -107,7 +105,7 @@ public:
 
                 if(node.node_type == INT) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
                 else if(node.node_type == FLOAT) ir_val->setInitializer(llvm::ConstantFP::get(getLLVMType(FLOAT), 0.0));
-                else if(node.node_type == CHAR) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(CHAR), 'a'));
+                else if(node.node_type == CHAR) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(CHAR), '$'));
                 else if(node.node_type == BOOL) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(BOOL), false));
 
                 if(varDecl->var_assign)
@@ -149,8 +147,6 @@ public:
     // CHANGE - change function return types, check last line, check arguments
     virtual void visit(ASTFuncDecl &node)
     {   
-        return_found = false;
-
         vector<string> args;
         vector<int> dims;
         for(auto funcArg : node.funcArgList)
@@ -159,7 +155,6 @@ public:
             dims.push_back(funcArg->dimension);
         }
         // symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args, dims);
-        symbol_table->addScope();
 
         // CHANGE
         vector<llvm::Type*> param_types;
@@ -177,6 +172,8 @@ public:
                                                       *Module);
         
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(*Context, "entry", func);
+        symbol_table->addScope(bb);
+
         Builder->SetInsertPoint(bb);
 
         // CHANGE to allocate arrays as welll
@@ -197,11 +194,17 @@ public:
 
         (node.block)->accept(*this);
 
-        symbol_table->removeScope();
-
         // CHANGE
-        if(!return_found) Builder->CreateRetVoid();
-        
+        if(!symbol_table->getRecentBlock()->getTerminator())
+        {
+            if(node.node_type == NONE) Builder->CreateRetVoid();
+            else if(node.node_type == INT) Builder->CreateRet(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
+            else if(node.node_type == FLOAT) Builder->CreateRet(llvm::ConstantFP::get(getLLVMType(FLOAT), 0.0));
+            else if(node.node_type == CHAR) Builder->CreateRet(llvm::ConstantInt::get(getLLVMType(CHAR), '$'));
+            else if(node.node_type == BOOL) Builder->CreateRet(llvm::ConstantInt::get(getLLVMType(BOOL), false));
+        }        
+
+        symbol_table->removeScope();
     }
 
     virtual void visit(ASTFuncCall &node)
@@ -331,10 +334,12 @@ public:
 
     virtual void visit(ASTStatReturn &node)
     {
-        return_found = true;
-        if(node.return_expr) (node.return_expr)->accept(*this);
-
-        Builder->CreateRet(ir_ret);
+        if(node.return_expr) 
+        {
+            (node.return_expr)->accept(*this);
+            Builder->CreateRet(ir_ret);
+        }
+        else Builder->CreateRetVoid();
     }
 
     virtual void visit(ASTStatLoopControl &node)
@@ -350,54 +355,74 @@ public:
     // CHANGE to accomodate for no else part and return in if
     virtual void visit(ASTStatIf &node)
     {
-        (node.exprList[0])->accept(*this);
-        llvm::Value* CondV = ir_ret;
-        llvm::Function *TheFunction = Builder->GetInsertBlock()->getParent();
+        // bool if_return_found = false;
+        // bool else_return_found = false;
+        // ifstmt_return_found = false;
+        
+        // (node.exprList[0])->accept(*this);
+        // llvm::Value* CondV = ir_ret;
+        // llvm::Function *TheFunction = Builder->GetInsertBlock()->getParent();
 
-        llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(*Context, "then", TheFunction);
-        llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(*Context, "else");
-        llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(*Context, "ifcont");
+        // llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(*Context, "then", TheFunction);
+        // llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(*Context, "else");
+        // llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(*Context, "ifcont");
 
-        if(node.blockList.size() == 1) ElseBB = MergeBB;
+        // if(node.blockList.size() == 1) ElseBB = MergeBB;
 
-        Builder->CreateCondBr(CondV, ThenBB, ElseBB);
+        // Builder->CreateCondBr(CondV, ThenBB, ElseBB);
 
-        Builder->SetInsertPoint(ThenBB);
-        (node.blockList[0])->accept(*this);
-        llvm::Value *ThenV = ir_ret;
+        // Builder->SetInsertPoint(ThenBB);
+        // (node.blockList[0])->accept(*this);
+        // llvm::Value *ThenV = ir_ret;
+        // if_return_found = ifstmt_return_found;
 
-        Builder->CreateBr(MergeBB);
-        ThenBB = Builder->GetInsertBlock();
+        // if(!if_return_found) Builder->CreateBr(MergeBB);
+        // ThenBB = Builder->GetInsertBlock();
 
-        llvm::Value *ElseV;
-        if(node.blockList.size() > 1)
-        {
-            TheFunction->getBasicBlockList().push_back(ElseBB);
-            Builder->SetInsertPoint(ElseBB);
-            (node.blockList[1])->accept(*this);
-            ElseV = ir_ret;
+        // llvm::Value *ElseV = nullptr;
+        // if(node.blockList.size() > 1)
+        // {
+        //     ifstmt_return_found = false;
 
-            Builder->CreateBr(MergeBB);
-            ElseBB = Builder->GetInsertBlock();
-        }
+        //     TheFunction->getBasicBlockList().push_back(ElseBB);
+        //     Builder->SetInsertPoint(ElseBB);
+        //     (node.blockList[1])->accept(*this);
+        //     ElseV = ir_ret;
+        //     else_return_found = ifstmt_return_found;
 
-        TheFunction->getBasicBlockList().push_back(MergeBB);
-        Builder->SetInsertPoint(MergeBB);
+        //     if(!else_return_found) Builder->CreateBr(MergeBB);
+        //     ElseBB = Builder->GetInsertBlock();
+        // }
 
-        llvm::PHINode *PN;
-        if(node.blockList.size() > 1)
-        {
-            PN = Builder->CreatePHI(ThenV->getType(), 2, "iftmp");
+        // TheFunction->getBasicBlockList().push_back(MergeBB);
+        // Builder->SetInsertPoint(MergeBB);
 
-            PN->addIncoming(ThenV, ThenBB);
-            PN->addIncoming(ElseV, ElseBB);
-        }
-        else
-        {
-            PN = Builder->CreatePHI(ThenV->getType(), 1, "iftmp");
-            PN->addIncoming(ThenV, ThenBB);
-        }
-        ir_ret = PN;
+        // // if(if_return_found && else_return_found)
+        // // {
+        // //     llvm::Type *retType = Builder->GetInsertBlock()->getParent()->getReturnType();
+        // //     if (retType == getLLVMType(NONE)) Builder->CreateRetVoid();
+        // //     else Builder->CreateRet(llvm::ConstantInt::get(getLLVMType(INT), 0));
+
+        // //     ir_ret = llvm::ConstantInt::get(getLLVMType(INT), 0);
+        // //     return;
+        // // }
+
+        // llvm::PHINode *PN;
+        // if(node.blockList.size() > 1)
+        // {
+        //     PN = Builder->CreatePHI(ThenV->getType(), 2, "iftmp");
+
+        //     PN->addIncoming(ThenV, ThenBB);
+        //     PN->addIncoming(ElseV, ElseBB);
+        // }
+        // else
+        // {
+        //     PN = Builder->CreatePHI(ThenV->getType(), 1, "iftmp");
+        //     PN->addIncoming(ThenV, ThenBB);
+        // }
+        // ir_ret = PN;
+
+        // ir_ret = llvm::ConstantInt::get(getLLVMType(INT), 0);
     }
 
     virtual void visit(ASTStatFor &node) {
