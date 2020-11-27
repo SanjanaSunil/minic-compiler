@@ -2,11 +2,6 @@
 
 using namespace std;
 
-extern "C" double printd(float X) {
-  fprintf(stderr, "%f\n", X);
-  return 0;
-}
-
 class IRVisitor : public ASTvisitor
 {
     IRTable *symbol_table;
@@ -33,21 +28,21 @@ public:
             case INT: return Builder->getInt32Ty();
             case FLOAT: return Builder->getFloatTy();
             case BOOL: return Builder->getInt1Ty();
-            case CHAR: return Builder->getInt8PtrTy();
+            case CHAR: return Builder->getInt8Ty();
+            case STRING: return Builder->getInt8PtrTy();
             default: return Builder->getInt32Ty();
         } 
     }
 
     // MAKE SURE ir_ret is being appropriately returned!!
     virtual void visit(ASTProg &node)
-    {
-        vector<llvm::Type*> putsArgs;
-        putsArgs.push_back(Builder->getInt8Ty()->getPointerTo());
-        llvm::ArrayRef<llvm::Type*> argsRef(putsArgs);
-        
-        llvm::FunctionType *putsType = llvm::FunctionType::get(getLLVMType(INT), argsRef, false);
-        llvm::FunctionCallee putsFunc = Module->getOrInsertFunction("puts", putsType);
-        
+    {   
+        // Printf 
+        std::vector<llvm::Type*> printfArgs;
+        printfArgs.push_back(getLLVMType(STRING));
+        llvm::FunctionType *printfType = llvm::FunctionType::get(getLLVMType(INT), printfArgs, true);
+        llvm::Function::Create(printfType, llvm::Function::ExternalLinkage, "printf", Module.get());
+
         symbol_table->addScope();
 
         for (auto progStat : node.progStatList)
@@ -368,8 +363,11 @@ public:
         Builder->CreateCondBr(CondV, ThenBB, ElseBB);
 
         Builder->SetInsertPoint(ThenBB);
+
+        symbol_table->addScope();
         (node.blockList[0])->accept(*this);
         llvm::Value *ThenV = ir_ret;
+        symbol_table->removeScope();
 
         ThenBB = Builder->GetInsertBlock();
         if(!ThenBB->getTerminator()) Builder->CreateBr(MergeBB);
@@ -379,8 +377,11 @@ public:
         {
             TheFunction->getBasicBlockList().push_back(ElseBB);
             Builder->SetInsertPoint(ElseBB);
+
+            symbol_table->addScope();
             (node.blockList[1])->accept(*this);
             ElseV = ir_ret;
+            symbol_table->removeScope();
 
             ElseBB = Builder->GetInsertBlock();
             if(!ElseBB->getTerminator()) Builder->CreateBr(MergeBB);
