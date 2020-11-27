@@ -7,11 +7,10 @@ func void trial(int r) {
 func int main() {
     if(false)
     {
+        // return 0;
         puts("YO");
     }
-    else
-    {
-        puts("sdfjn");
-    }
+
+    puts("ssjf");
     return 1;
 }

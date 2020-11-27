@@ -358,6 +358,8 @@ public:
         llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(*Context, "else");
         llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(*Context, "ifcont");
 
+        if(node.blockList.size() == 1) ElseBB = MergeBB;
+
         Builder->CreateCondBr(CondV, ThenBB, ElseBB);
 
         Builder->SetInsertPoint(ThenBB);
@@ -367,20 +369,34 @@ public:
         Builder->CreateBr(MergeBB);
         ThenBB = Builder->GetInsertBlock();
 
-        TheFunction->getBasicBlockList().push_back(ElseBB);
-        Builder->SetInsertPoint(ElseBB);
-        (node.blockList[1])->accept(*this);
-        llvm::Value *ElseV = ir_ret;
+        llvm::Value *ElseV;
+        if(node.blockList.size() > 1)
+        {
+            TheFunction->getBasicBlockList().push_back(ElseBB);
+            Builder->SetInsertPoint(ElseBB);
+            (node.blockList[1])->accept(*this);
+            ElseV = ir_ret;
 
-        Builder->CreateBr(MergeBB);
-        ElseBB = Builder->GetInsertBlock();
+            Builder->CreateBr(MergeBB);
+            ElseBB = Builder->GetInsertBlock();
+        }
 
         TheFunction->getBasicBlockList().push_back(MergeBB);
         Builder->SetInsertPoint(MergeBB);
-        llvm::PHINode *PN = Builder->CreatePHI(ThenV->getType(), 2, "iftmp");
 
-        PN->addIncoming(ThenV, ThenBB);
-        PN->addIncoming(ElseV, ElseBB);
+        llvm::PHINode *PN;
+        if(node.blockList.size() > 1)
+        {
+            PN = Builder->CreatePHI(ThenV->getType(), 2, "iftmp");
+
+            PN->addIncoming(ThenV, ThenBB);
+            PN->addIncoming(ElseV, ElseBB);
+        }
+        else
+        {
+            PN = Builder->CreatePHI(ThenV->getType(), 1, "iftmp");
+            PN->addIncoming(ThenV, ThenBB);
+        }
         ir_ret = PN;
     }
 
