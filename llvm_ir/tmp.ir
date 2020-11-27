@@ -2,6 +2,7 @@
 source_filename = "MiniC"
 
 @a = private global float 0x3FF19999A0000000
+@0 = private unnamed_addr constant [5 x i8] c"\22YO\22\00", align 1
 
 declare i32 @puts(i8*)
 
@@ -14,5 +15,13 @@ entry:
 
 define i32 @main() {
 entry:
+  br i1 true, label %then, label %ifcont
+
+then:                                             ; preds = %entry
+  %puts = call i32 @puts(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @0, i32 0, i32 0))
+  ret i32 0
+
+ifcont:                                           ; preds = %entry
+  %iftmp = phi i32 [ 0, %then ]
   ret i32 0
 }

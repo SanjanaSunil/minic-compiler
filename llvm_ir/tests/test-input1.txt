@@ -5,7 +5,7 @@ func void trial(int r) {
 }
 
 func int main() {
-    if(false)
+    if(true)
     {
         puts("YO");
         return 0;
