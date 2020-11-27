@@ -151,11 +151,11 @@ public:
             args.push_back(exp->node_type);
             dims.push_back(func_arg_dims);
 
-            if(node.id == "input" && exp->node_type == NONE) error("Invalid input function");
+            if(node.id == "scanf" && exp->node_type == NONE) error("Invalid input function");
             if(node.id == "printf" && exp->node_type == NONE) error("Invalid print function");
         }
 
-        if(node.id == "input" || node.id == "printf")
+        if(node.id == "scanf" || node.id == "printf")
         {
             node.node_type = NONE;
             return;

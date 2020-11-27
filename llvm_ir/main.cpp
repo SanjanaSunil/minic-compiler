@@ -51,8 +51,8 @@ int main(int argc, const char* argv[]) {
     iv->visit(*program_root);
     iv->Module->print(llvm::errs(), nullptr);
     
-    std::error_code err;
-    std::string file = "tmp.ir";
+    error_code err;
+    string file = "tmp.ir";
     auto fd = new llvm::raw_fd_ostream(
             llvm::StringRef(file), 
             err

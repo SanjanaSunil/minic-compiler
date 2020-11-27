@@ -37,11 +37,12 @@ public:
     // MAKE SURE ir_ret is being appropriately returned!!
     virtual void visit(ASTProg &node)
     {   
-        // Printf 
-        std::vector<llvm::Type*> printfArgs;
-        printfArgs.push_back(getLLVMType(STRING));
-        llvm::FunctionType *printfType = llvm::FunctionType::get(getLLVMType(INT), printfArgs, true);
-        llvm::Function::Create(printfType, llvm::Function::ExternalLinkage, "printf", Module.get());
+        //printf and scanf
+        // CHANGE - add support for float
+        vector<llvm::Type*> runTimeFuncArgs = { getLLVMType(STRING) };
+        llvm::FunctionType *runTimeFuncType = llvm::FunctionType::get(getLLVMType(INT), runTimeFuncArgs, true);
+        llvm::Function::Create(runTimeFuncType, llvm::Function::ExternalLinkage, "printf", Module.get());
+        llvm::Function::Create(runTimeFuncType, llvm::Function::ExternalLinkage, "scanf", Module.get());
 
         symbol_table->addScope();
 
@@ -202,13 +203,20 @@ public:
         symbol_table->removeScope();
     }
 
+    // CHANGE - add error handling for printf and scanf
     virtual void visit(ASTFuncCall &node)
     {
         llvm::Function *CalleeF = Module->getFunction(node.id);
         vector<llvm::Value*> ArgsV;
+
         for (unsigned i = 0, e = node.funcArgList.size(); i != e; ++i) {
-            node.funcArgList[i]->accept(*this);
-            ArgsV.push_back(ir_ret);
+            node.funcArgList[i]->accept(*this);     
+            if(node.id == "scanf" && i != 0) 
+            {
+                ASTExprVar* variable = dynamic_cast<ASTExprVar*>(node.funcArgList[i]);
+                ArgsV.push_back(symbol_table->getVal(variable->var->id));
+            }
+            else ArgsV.push_back(ir_ret);
         }
 
         if(CalleeF->getReturnType()->isVoidTy()) ir_ret = Builder->CreateCall(CalleeF, ArgsV);

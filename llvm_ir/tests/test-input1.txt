@@ -1,17 +1,14 @@
-float a = 1.1;
+// func void trial(int r) {
 
-func void trial(int r) {
-
-}
+// }
 
 func int main() {
-    if(true)
-    {
-        float x = 2.1;
-        char c = 'd';
-        printf("%f %c skfj", x, c);
-        return 0;
-    }
+    // float x = 2.1;
+    // printf("%f", x);
 
-    // return 1;
+    int x = 2;
+    x = 3;
+    scanf("%d", x);
+    printf("%d", x);
+    return 0;
 }
