@@ -7,8 +7,9 @@ func void trial(int r) {
 func int main() {
     if(true)
     {
-        float c = 2.1;
-        printf("%d %f skfj", 1, c);
+        float x = 2.1;
+        char c = 'd';
+        printf("%f %c skfj", x, c);
         return 0;
     }
 

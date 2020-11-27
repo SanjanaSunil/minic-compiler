@@ -382,7 +382,7 @@ public:
     virtual antlrcpp::Any visitExprChar(ExprParser::ExprCharContext *context)
     {
         // cout << "In visitExprChar" << endl;
-        ASTExprChar *node = new ASTExprChar((context->CHAR()->getText())[0]);
+        ASTExprChar *node = new ASTExprChar((context->CHAR()->getText())[1]);
         node->node_type = CHAR;
         return (ASTExpr *) node;
     }
