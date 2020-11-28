@@ -353,7 +353,32 @@ public:
 
     virtual void visit(ASTStatWhile &node)
     {
+        symbol_table->addScope();
 
+        llvm::Function *TheFunction = Builder->GetInsertBlock()->getParent();
+        llvm::BasicBlock *LoopCondBB = llvm::BasicBlock::Create(*Context, "loopcond", TheFunction);
+        llvm::BasicBlock *LoopBodyBB = llvm::BasicBlock::Create(*Context, "loopbody");
+        llvm::BasicBlock *OuterBB = llvm::BasicBlock::Create(*Context, "outer");
+
+        Builder->CreateBr(LoopCondBB);
+        Builder->SetInsertPoint(LoopCondBB);
+
+        llvm::Value* CondV = llvm::ConstantInt::get(getLLVMType(BOOL), 1);
+        (node.exp)->accept(*this);
+        CondV = ir_ret;
+        Builder->CreateCondBr(CondV, LoopBodyBB, OuterBB);
+
+        // Loop Body
+        TheFunction->getBasicBlockList().push_back(LoopBodyBB);
+        Builder->SetInsertPoint(LoopBodyBB);
+        (node.block)->accept(*this);
+        Builder->CreateBr(LoopCondBB);
+
+        // Outer block
+        TheFunction->getBasicBlockList().push_back(OuterBB);
+        Builder->SetInsertPoint(OuterBB);
+
+        symbol_table->removeScope();
     }
 
     // CHANGE to accomodate for no else part and return in if
@@ -399,20 +424,20 @@ public:
         TheFunction->getBasicBlockList().push_back(MergeBB);
         Builder->SetInsertPoint(MergeBB);
 
-        llvm::PHINode *PN;
-        if(node.blockList.size() > 1)
-        {
-            PN = Builder->CreatePHI(ThenV->getType(), 2, "iftmp");
+        // llvm::PHINode *PN;
+        // if(node.blockList.size() > 1)
+        // {
+        //     PN = Builder->CreatePHI(ThenV->getType(), 2, "iftmp");
 
-            PN->addIncoming(ThenV, ThenBB);
-            PN->addIncoming(ElseV, ElseBB);
-        }
-        else
-        {
-            PN = Builder->CreatePHI(ThenV->getType(), 1, "iftmp");
-            PN->addIncoming(ThenV, ThenBB);
-        }
-        ir_ret = PN;
+        //     PN->addIncoming(ThenV, ThenBB);
+        //     PN->addIncoming(ElseV, ElseBB);
+        // }
+        // else
+        // {
+        //     PN = Builder->CreatePHI(ThenV->getType(), 1, "iftmp");
+        //     PN->addIncoming(ThenV, ThenBB);
+        // }
+        // ir_ret = PN;
     }
 
     // CHANGE take care of array in init, also allow for optional conditions

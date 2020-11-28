@@ -52,7 +52,7 @@ int main(int argc, const char* argv[]) {
     iv->Module->print(llvm::errs(), nullptr);
     
     error_code err;
-    string file = "tmp.ir";
+    string file = "tmp.bc";
     auto fd = new llvm::raw_fd_ostream(
             llvm::StringRef(file), 
             err
