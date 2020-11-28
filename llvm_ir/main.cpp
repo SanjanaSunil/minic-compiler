@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_set>
 
 #include "antlr4-runtime.h"
 #include "ExprLexer.cpp"
@@ -26,10 +27,22 @@
 using namespace std;
 using namespace antlr4;
 
+void printEBB(unordered_set<llvm::BasicBlock*>& used_blocks, llvm::BasicBlock* B, string spaces) {
+    used_blocks.insert(B);
+
+    llvm::errs() << spaces << B->getName() << "\n";
+    for(auto *S : llvm::successors(B))
+    {
+        if(!(S->hasNPredecessorsOrMore(2)))
+            printEBB(used_blocks, S, spaces + "  ");
+    }
+}
+
+
 int main(int argc, const char* argv[]) {
     std::ifstream stream;
 
-    cout << "Processing input file " << argv[1] << endl;
+    // cout << "Processing input file " << argv[1] << endl;
     stream.open(argv[1]);
     
     ANTLRInputStream input(stream);
@@ -49,7 +62,7 @@ int main(int argc, const char* argv[]) {
 
     IRVisitor *iv = new IRVisitor();
     iv->visit(*program_root);
-    iv->Module->print(llvm::errs(), nullptr);
+    // iv->Module->print(llvm::errs(), nullptr);
     
     error_code err;
     string file = "tmp.bc";
@@ -58,5 +71,26 @@ int main(int argc, const char* argv[]) {
             err
         );
     iv->Module->print(*fd, nullptr);
+
+    unordered_set<llvm::BasicBlock*> used_blocks;
+    for (auto&F : *(iv->Module)) 
+    {
+        if(F.getName() == "printf" || F.getName() == "scanf") continue;
+        
+        llvm::errs() << "Function: " << F.getName() << "\n";
+        llvm::errs() << "=====================\n\n";
+
+        for(llvm::Function::iterator b = F.begin(), be = F.end(); b != be; ++b)
+        {
+            llvm::BasicBlock* B = llvm::dyn_cast<llvm::BasicBlock>(&*b);
+
+            if(used_blocks.find(B) == used_blocks.end()) 
+            {
+                printEBB(used_blocks, B, "");
+                llvm::errs() << "\n\n";
+            }
+        }
+    }
+
     return 0;
 }

@@ -2,6 +2,7 @@
 source_filename = "MiniC"
 
 @0 = private unnamed_addr constant [5 x i8] c"\22%f\22\00", align 1
+@1 = private unnamed_addr constant [10 x i8] c"\22sdfjsdf\22\00", align 1
 
 declare i32 @printf(i8*, ...)
 
@@ -14,5 +15,25 @@ entry:
   %0 = load float, float* %x, align 4
   %1 = fpext float %0 to double
   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @0, i32 0, i32 0), double %1)
+  br i1 true, label %then, label %else
+
+then:                                             ; preds = %entry
+  %printf1 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @1, i32 0, i32 0))
+  br i1 true, label %then2, label %ifcont
+
+then2:                                            ; preds = %then
+  %y = alloca i32, align 4
+  store i32 1, i32* %y, align 4
+  br label %ifcont
+
+ifcont:                                           ; preds = %then2, %then
+  ret i32 1
+
+else:                                             ; preds = %entry
+  %a = alloca i32, align 4
+  store i32 2, i32* %a, align 4
+  br label %ifcont3
+
+ifcont3:                                          ; preds = %else
   ret i32 0
 }

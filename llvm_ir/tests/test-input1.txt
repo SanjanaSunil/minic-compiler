@@ -6,6 +6,19 @@ func int main() {
     float x = 2.1;
     printf("%f", x);
 
+    if(true)
+    {
+        printf("sdfjsdf");
+        if(true)
+        {
+            int y = 1;
+        }
+        return 1;
+    }
+    else
+    {
+        int a = 2;
+    }
     // int x = 1 + 2;
     // x = 5;
     // scanf("%d", x);
