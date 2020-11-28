@@ -415,7 +415,68 @@ public:
         ir_ret = PN;
     }
 
+    // CHANGE take care of array in init, also allow for optional conditions
+    /*
+    Basic block for initializing
+    Leads to another block with loop condition. If true, go to loop body, else outer
+    Body has end expr. End expr goes to loop condition
+    */
     virtual void visit(ASTStatFor &node) {
+        symbol_table->addScope();
 
+        llvm::Function *TheFunction = Builder->GetInsertBlock()->getParent();
+        // llvm::BasicBlock *BeforeLoopBB = Builder->GetInsertBlock();
+
+        // Initializing
+        if(node.var_decl) (node.var_decl)->accept(*this);
+        if(node.init_var && node.init_expr) 
+        {
+            (node.init_var)->accept(*this);
+            (node.init_expr)->accept(*this);
+
+            llvm::Value* lhs_val = symbol_table->getVal((node.init_var)->id);
+            Builder->CreateStore(ir_ret, lhs_val);
+        }
+
+        llvm::BasicBlock *LoopCondBB = llvm::BasicBlock::Create(*Context, "loopcond", TheFunction);
+        llvm::BasicBlock *LoopBodyBB = llvm::BasicBlock::Create(*Context, "loopbody");
+        llvm::BasicBlock *OuterBB = llvm::BasicBlock::Create(*Context, "outer");
+
+        // Loop Condition
+        Builder->CreateBr(LoopCondBB);
+        Builder->SetInsertPoint(LoopCondBB);
+        llvm::Value* CondV = llvm::ConstantInt::get(getLLVMType(BOOL), 1);
+        if(node.cond_expr) 
+        {
+            (node.cond_expr)->accept(*this);
+            CondV = ir_ret;
+        }
+        Builder->CreateCondBr(CondV, LoopBodyBB, OuterBB);
+        /*
+        for allocValue in all symbol tables:
+            Builder->CreatePHI(allocValue->getType(), 1, "iftmp");
+            PN->addIncoming(acclocValue, BeforeLoopBB);
+        (Same thing for LoopBodyBB)
+        */
+
+        // Loop Body
+        TheFunction->getBasicBlockList().push_back(LoopBodyBB);
+        Builder->SetInsertPoint(LoopBodyBB);
+        (node.block)->accept(*this);
+        if(node.loop_var && node.loop_expr) 
+        {
+            (node.loop_var)->accept(*this);
+            (node.loop_expr)->accept(*this);
+
+            llvm::Value* lhs_val = symbol_table->getVal((node.loop_var)->id);
+            Builder->CreateStore(ir_ret, lhs_val);
+        }
+        Builder->CreateBr(LoopCondBB);
+
+        // Outer block
+        TheFunction->getBasicBlockList().push_back(OuterBB);
+        Builder->SetInsertPoint(OuterBB);
+
+        symbol_table->removeScope();
     }
 };

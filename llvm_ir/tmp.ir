@@ -2,7 +2,6 @@
 source_filename = "MiniC"
 
 @0 = private unnamed_addr constant [5 x i8] c"\22%d\22\00", align 1
-@1 = private unnamed_addr constant [5 x i8] c"\22%d\22\00", align 1
 
 declare i32 @printf(i8*, ...)
 
@@ -11,10 +10,24 @@ declare i32 @scanf(i8*, ...)
 define i32 @main() {
 entry:
   %x = alloca i32, align 4
-  store i32 1, i32* %x, align 4
-  %scanf = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @0, i32 0, i32 0), i32* %x)
-  %x1 = alloca i32, align 4
-  %0 = load i32, i32* %x, align 4
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @1, i32 0, i32 0), i32 %0)
+  store i32 -7, i32* %x, align 4
+  %i = alloca i32, align 4
+  store i32 0, i32* %i, align 4
+  br label %loopcond
+
+loopcond:                                         ; preds = %loopbody, %entry
+  %0 = load i32, i32* %i, align 4
+  %lt = icmp slt i32 %0, 10
+  br i1 %lt, label %loopbody, label %outer
+
+loopbody:                                         ; preds = %loopcond
+  %1 = load i32, i32* %x, align 4
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @0, i32 0, i32 0), i32 %1)
+  %2 = load i32, i32* %i, align 4
+  %add = add i32 %2, 1
+  store i32 %add, i32* %i, align 4
+  br label %loopcond
+
+outer:                                            ; preds = %loopcond
   ret i32 0
 }

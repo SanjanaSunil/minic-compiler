@@ -374,7 +374,7 @@ public:
         }
 
         if(node.cond_expr) (node.cond_expr)->accept(*this);
-        if((node.cond_expr)->node_type != BOOL && (node.cond_expr)->node_type != INT)
+        if((node.cond_expr)->node_type != BOOL)
             error("Invalid for loop");
 
         if(node.loop_var && node.loop_expr) 
