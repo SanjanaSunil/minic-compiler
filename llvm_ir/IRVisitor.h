@@ -215,7 +215,12 @@ public:
             }
             else 
             {
-                node.funcArgList[i]->accept(*this); 
+                node.funcArgList[i]->accept(*this);
+
+                // Take care of printing float 
+                if(node.id == "printf" && node.funcArgList[i]->node_type == FLOAT) 
+                    ir_ret = Builder->CreateFPExt(ir_ret, Builder->getDoubleTy());
+ 
                 ArgsV.push_back(ir_ret);
             }
         }
