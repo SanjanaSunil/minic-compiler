@@ -112,8 +112,11 @@ public:
             }
             else
             {
+                llvm::Value *array_size = nullptr;
+                if(dims > 0) array_size = ir_ret;
+
                 llvm::Function *parent = Builder->GetInsertBlock()->getParent();
-                llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(getLLVMType(node.node_type), nullptr, varDecl->getId());
+                llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(getLLVMType(node.node_type), array_size, varDecl->getId());
 
                 symbol_table->addVariableToCurrentScope(varDecl->getId(), alloca_inst);
 
@@ -138,18 +141,9 @@ public:
 
     }
 
-    // CHANGE - change function return types, check last line, check arguments
+    // CHANGE - change function return types, check last line, check arguments, check array
     virtual void visit(ASTFuncDecl &node)
     {   
-        vector<string> args;
-        vector<int> dims;
-        for(auto funcArg : node.funcArgList)
-        {
-            args.push_back(funcArg->lit_type);
-            dims.push_back(funcArg->dimension);
-        }
-        // symbol_table->addFunctionToCurrentScope(node.id, node.lit_type, args, dims);
-
         // CHANGE
         vector<llvm::Type*> param_types;
         for(auto funcArg : node.funcArgList) 
@@ -201,7 +195,7 @@ public:
         symbol_table->removeScope();
     }
 
-    // CHANGE - add error handling for printf and scanf
+    // CHANGE - add error handling for printf and scanf, check array as parameter
     virtual void visit(ASTFuncCall &node)
     {
         llvm::Function *CalleeF = Module->getFunction(node.id);
@@ -307,7 +301,15 @@ public:
     virtual void visit(ASTExprVar &node)
     {
         (node.var)->accept(*this);
-        ir_ret = symbol_table->getVal((node.var)->id);
+
+        if((node.var)->getDimensions() > 0)
+        {
+            vector<llvm::Value*> idxs = {ir_ret};
+            llvm::Value* array_val = symbol_table->getVal((node.var)->id);
+            ir_ret = Builder->CreateInBoundsGEP(array_val, idxs, (node.var)->id + "$");
+        }
+        else ir_ret = symbol_table->getVal((node.var)->id);
+
         ir_ret = Builder->CreateLoad(ir_ret);
     }
 
@@ -320,6 +322,20 @@ public:
     virtual void visit(ASTStatVarAssign &node)
     {
         (node.exp)->accept(*this);
+
+        if((node.var)->getDimensions() > 0)
+        {
+            llvm::Value* exp_val = ir_ret;
+
+            (node.var)->accept(*this);
+            vector<llvm::Value*> idxs = {ir_ret};
+            llvm::Value* array_val = symbol_table->getVal((node.var)->id);
+            auto idx_ptr = Builder->CreateInBoundsGEP(array_val, idxs, (node.var)->id + "$");
+
+            Builder->CreateStore(exp_val, idx_ptr);
+            return;
+        }
+
         llvm::Value* lhs_val = symbol_table->getVal((node.var)->id);
         Builder->CreateStore(ir_ret, lhs_val);
     }
@@ -386,7 +402,6 @@ public:
         symbol_table->removeScope();
     }
 
-    // CHANGE to accomodate for no else part and return in if
     virtual void visit(ASTStatIf &node)
     {   
         (node.exprList[0])->accept(*this);
@@ -461,11 +476,24 @@ public:
         if(node.var_decl) (node.var_decl)->accept(*this);
         if(node.init_var && node.init_expr) 
         {
-            (node.init_var)->accept(*this);
             (node.init_expr)->accept(*this);
 
-            llvm::Value* lhs_val = symbol_table->getVal((node.init_var)->id);
-            Builder->CreateStore(ir_ret, lhs_val);
+            if((node.init_var)->getDimensions() > 0)
+            {
+                llvm::Value* exp_val = ir_ret;
+
+                (node.init_var)->accept(*this);
+                vector<llvm::Value*> idxs = {ir_ret};
+                llvm::Value* array_val = symbol_table->getVal((node.init_var)->id);
+                auto idx_ptr = Builder->CreateInBoundsGEP(array_val, idxs, (node.init_var)->id + "$");
+
+                Builder->CreateStore(exp_val, idx_ptr);
+            }
+            else
+            {
+                llvm::Value* lhs_val = symbol_table->getVal((node.init_var)->id);
+                Builder->CreateStore(ir_ret, lhs_val);
+            }
         }
 
         llvm::BasicBlock *LoopCondBB = llvm::BasicBlock::Create(*Context, "loopcond", TheFunction);
@@ -493,13 +521,27 @@ public:
         TheFunction->getBasicBlockList().push_back(LoopBodyBB);
         Builder->SetInsertPoint(LoopBodyBB);
         (node.block)->accept(*this);
+
         if(node.loop_var && node.loop_expr) 
         {
-            (node.loop_var)->accept(*this);
             (node.loop_expr)->accept(*this);
 
-            llvm::Value* lhs_val = symbol_table->getVal((node.loop_var)->id);
-            Builder->CreateStore(ir_ret, lhs_val);
+            if((node.loop_var)->getDimensions() > 0)
+            {
+                llvm::Value* exp_val = ir_ret;
+
+                (node.loop_var)->accept(*this);
+                vector<llvm::Value*> idxs = {ir_ret};
+                llvm::Value* array_val = symbol_table->getVal((node.loop_var)->id);
+                auto idx_ptr = Builder->CreateInBoundsGEP(array_val, idxs, (node.loop_var)->id + "$");
+
+                Builder->CreateStore(exp_val, idx_ptr);
+            }
+            else
+            {
+                llvm::Value* lhs_val = symbol_table->getVal((node.loop_var)->id);
+                Builder->CreateStore(ir_ret, lhs_val);
+            }
         }
         Builder->CreateBr(LoopCondBB);
 
