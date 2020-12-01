@@ -1,4 +1,6 @@
-func void merge(int arr[], int l, int mid, int r) {
+int arr[100];
+
+func void merge(int l, int mid, int r) {
     int output[r-l+1];
 
     int p1 = l, p2 = mid + 1;
@@ -40,33 +42,41 @@ func void merge(int arr[], int l, int mid, int r) {
     return;
 }
 
-func void sort(int arr[], int l, int r) {
+func void sort(int l, int r) {
+    if(l >= r)
+    {
+        return;
+    }
+
     int mid = (l + r)/2;
 
-    sort(arr, l, mid);
-    sort(arr, mid+1, r);
-    merge(arr, l, mid, r);
+    sort(l, mid);
+    sort(mid+1, r);
+    merge(l, mid, r);
 
     return;
 }
 
 func int main() {
     int n;
-    input(n);
+    // input(n);
+    scanf("%d", n);
 
-    int arr[n];
+    // int arr[n];
     for(int i=0; i<n; i=i+1)
     {
-        input(arr[i]);
+        // input(arr[i]);
+        scanf("%d", arr[i]);
     }
 
-    sort(arr, 0, n-1);
+    sort(0, n-1);
 
     for(int i=0; i<n; i=i+1)
     {
-        print(arr[i], " ");
+        // print(arr[i], " ");
+        printf("%d ", arr[i]);
     }
-    print("\n");
+    // print("\n");
 
     return 0;
 }
