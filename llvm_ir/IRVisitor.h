@@ -65,7 +65,6 @@ public:
             stat->accept(*this);
     }
 
-    // CHANGE - take care of array?
     virtual void visit(ASTVariable &node)
     {
         if(node.param1) (node.param1)->accept(*this);
@@ -77,7 +76,6 @@ public:
         (node.exp)->accept(*this);
     }
 
-    /* CHANGE! */
     virtual void visit(ASTVariableDecl &node)
     {
         for(auto varDecl : node.varList)
@@ -87,8 +85,6 @@ public:
             int dims = 0;
             if(varDecl->var) dims = varDecl->var->getDimensions();
 
-            // Change this to reflect all types, not just int. Take care of arrays as well.
-            // Change to include assignment 
             if(symbol_table->isGlobal())
             {
                 if(dims > 0)
@@ -168,7 +164,7 @@ public:
 
     }
 
-    // CHANGE - change function return types, check last line, check arguments, check array
+    // CHANGE - allow array argument
     virtual void visit(ASTFuncDecl &node)
     {   
         // CHANGE
@@ -209,7 +205,6 @@ public:
 
         (node.block)->accept(*this);
 
-        // CHANGE
         if(!Builder->GetInsertBlock()->getTerminator())
         {
             if(node.node_type == NONE) Builder->CreateRetVoid();
@@ -222,7 +217,7 @@ public:
         symbol_table->removeScope();
     }
 
-    // CHANGE - add error handling for printf and scanf, check array as parameter
+    // CHANGE - check array as parameter
     virtual void visit(ASTFuncCall &node)
     {
         llvm::Function *CalleeF = Module->getFunction(node.id);
@@ -307,6 +302,7 @@ public:
         if(node.unary_op == "!") ir_ret = Builder->CreateNot(operand, "not");
     }
 
+    // CHANGE - FOR FLOAT etc
     virtual void visit(ASTExprBinary &node)
     {
         llvm::Value *l;
@@ -340,7 +336,6 @@ public:
     {
     }
 
-    // CHANGE to check for array
     virtual void visit(ASTExprVar &node)
     {
         (node.var)->accept(*this);
@@ -365,7 +360,6 @@ public:
         (node.func_call)->accept(*this);
     }
 
-    // CHANGE - change type?
     virtual void visit(ASTStatVarAssign &node)
     {
         (node.exp)->accept(*this);
@@ -512,7 +506,7 @@ public:
         // ir_ret = PN;
     }
 
-    // CHANGE take care of array in init, also allow for optional conditions
+    // CHANGE allow for optional conditions
     /*
     Basic block for initializing
     Leads to another block with loop condition. If true, go to loop body, else outer
