@@ -1,13 +1,21 @@
 func int main() {
     int n1, m1, n2, m2;
-    input(n1, n2, m1, m2);
+    // input(n1, n2, m1, m2);
+    scanf("%d %d %d %d", n1, m1, n2, m2);
+
+    if(m1 != n2)
+    {
+        printf("Cannot multiply");
+        return 0;
+    }
 
     int mat1[n1][m1], mat2[n2][m2];
     for(int i=0; i<n1; i=i+1)
     {
         for(int j=0; j<m1; j=j+1)
         {
-            input(mat1[i][j]);
+            // input(mat1[i][j]);
+            scanf("%d", mat1[i][j]);
         }
     }
 
@@ -15,17 +23,20 @@ func int main() {
     {
         for(int j=0; j<m2; j=j+1)
         {
-            input(mat2[i][j]);
+            // input(mat2[i][j]);
+            scanf("%d", mat2[i][j]);
         }
     }
 
-    if(m1 != n2)
+    int ans[n1][m2];
+    for(int i=0; i<n1; i=i+1)
     {
-        print("Cannot multiply");
-        return 0;
+        for(int j=0; j<m2; j=j+1)
+        {
+            ans[i][j] = 0;
+        }
     }
 
-    int ans[n1][m2];
     for(int i=0; i<n1; i=i+1)
     {
         for(int j=0; j<m2; j=j+1)
@@ -39,11 +50,12 @@ func int main() {
 
     for(int i=0; i<n1; i=i+1)
     {
+        printf(" | ");
         for(int j=0; j<m2; j=j+1)
         {
-            print(ans[i][j], " ");
+            printf("%d ", ans[i][j]);
         }
-        print("\n");
+        // print("\n");
     }
 
     return 0;

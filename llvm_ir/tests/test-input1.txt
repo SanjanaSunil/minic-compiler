@@ -1,16 +1,30 @@
 func int main() {
-    // int n;
-    // input(n);
-    // scanf("%d", n);
 
-    int arr[5];
+    int arr1[2][2];
+    int arr2[2][2];
+
+    int arr3[2][2];
+
+    for(int i=0; i<2; i=i+1)
+    {
+        for(int j=0; j<2; j=j+1)
+        {
+            scanf("%d", arr1[i][j]);
+            scanf("%d", arr2[i][j]);
+
+            arr3[i][j] = arr1[i][j] + arr2[i][j];
+        }
+    }
     
-    int i = 2;
-    scanf("%d", arr[i]);
-    // scanf("%d", arr[1]);
-
-    // printf("%d ", arr[0]);
-    printf("%d", arr[i]);
+    for(int i=0; i<2; i=i+1)
+    {
+        for(int j=0; j<2; j=j+1)
+        {
+            arr3[i][j] = arr1[i][j] + arr2[i][j];
+            printf("%d ", arr3[i][j]);
+        }
+        printf(" | ");
+    }
 
     return 0;
 }

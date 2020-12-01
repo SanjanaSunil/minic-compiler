@@ -9,7 +9,7 @@ class IRVisitor : public ASTvisitor
     unique_ptr<llvm::IRBuilder<>> Builder;
 
     llvm::Value *ir_ret;
-    bool scanf_present;
+    llvm::Value *first_array_param;
 
 public:
     unique_ptr<llvm::Module> Module;
@@ -17,6 +17,7 @@ public:
     IRVisitor() {
         symbol_table = new IRTable();
         ir_ret = nullptr;
+        first_array_param = nullptr;
 
         Context = make_unique<llvm::LLVMContext>();
         Module = make_unique<llvm::Module>("MiniC", *Context);
@@ -68,7 +69,11 @@ public:
     virtual void visit(ASTVariable &node)
     {
         if(node.param1) (node.param1)->accept(*this);
-        if(node.param2) (node.param2)->accept(*this);
+        if(node.param2) 
+        {
+            first_array_param = ir_ret;
+            (node.param2)->accept(*this);
+        }
     }
 
     virtual void visit(ASTVariableAssign &node)
@@ -90,7 +95,17 @@ public:
                 if(dims > 0)
                 {
                     ASTExprInt* int_node = dynamic_cast<ASTExprInt*>(varDecl->var->param1);
-                    auto var_type = llvm::ArrayType::get(getLLVMType(node.node_type), int_node->intlit);
+                    int global_array_sz = int_node->intlit;
+
+                    int cols = 0;
+                    if(dims == 2)
+                    {
+                        ASTExprInt* int_node2 = dynamic_cast<ASTExprInt*>(varDecl->var->param2);
+                        cols = int_node2->intlit;
+                        global_array_sz *= cols;
+                    }
+
+                    auto var_type = llvm::ArrayType::get(getLLVMType(node.node_type), global_array_sz);
                     auto ir_val = new llvm::GlobalVariable(*Module, 
                                                             var_type, 
                                                             false,
@@ -99,7 +114,7 @@ public:
                                                             varDecl->getId());
 
                     vector<llvm::Constant*> global_arr_vals;
-                    for(int i=0; i<int_node->intlit; ++i)
+                    for(int i=0; i<global_array_sz; ++i)
                     {
                         if(node.node_type == INT) global_arr_vals.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
                         else if(node.node_type == FLOAT) global_arr_vals.push_back(llvm::ConstantFP::get(getLLVMType(FLOAT), 0.0));
@@ -109,7 +124,8 @@ public:
 
                     ir_val->setInitializer(llvm::ConstantArray::get(var_type, global_arr_vals));
 
-                    symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
+                    if(dims == 2) symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val, llvm::ConstantInt::get(getLLVMType(INT), cols));
+                    else symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
                 }
                 else
                 {
@@ -138,11 +154,13 @@ public:
             {
                 llvm::Value *array_size = nullptr;
                 if(dims > 0) array_size = ir_ret;
+                if(dims == 2) array_size = Builder->CreateMul(ir_ret, first_array_param, "mul_tmp");
 
                 llvm::Function *parent = Builder->GetInsertBlock()->getParent();
                 llvm::AllocaInst *alloca_inst = Builder->CreateAlloca(getLLVMType(node.node_type), array_size, varDecl->getId());
 
-                symbol_table->addVariableToCurrentScope(varDecl->getId(), alloca_inst);
+                if(dims == 2) symbol_table->addVariableToCurrentScope(varDecl->getId(), alloca_inst, ir_ret); 
+                else symbol_table->addVariableToCurrentScope(varDecl->getId(), alloca_inst);
 
                 if(varDecl->var_assign)
                 {
@@ -235,6 +253,11 @@ public:
                     vector<llvm::Value*> idxs;
                     if(symbol_table->isGlobalVariable((variable->var)->id)) 
                         idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+                    if((variable->var)->getDimensions() == 2) 
+                    {
+                        llvm::Value* idx = Builder->CreateMul(symbol_table->getArrayParam((variable->var)->id), first_array_param, "mul_tmp");
+                        ir_ret = Builder->CreateAdd(ir_ret, idx, "add_tmp");
+                    }
                     idxs.push_back(ir_ret);
 
                     llvm::Value* array_val = symbol_table->getVal((variable->var)->id);
@@ -345,6 +368,12 @@ public:
             vector<llvm::Value*> idxs;
             if(symbol_table->isGlobalVariable((node.var)->id)) 
                 idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+
+            if((node.var)->getDimensions() == 2) 
+            {
+                llvm::Value* idx = Builder->CreateMul(symbol_table->getArrayParam((node.var)->id), first_array_param, "mul_tmp");
+                ir_ret = Builder->CreateAdd(ir_ret, idx, "add_tmp");
+            }
             idxs.push_back(ir_ret);
 
             llvm::Value* array_val = symbol_table->getVal((node.var)->id);
@@ -373,6 +402,12 @@ public:
             vector<llvm::Value*> idxs;
             if(symbol_table->isGlobalVariable((node.var)->id)) 
                 idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+
+            if((node.var)->getDimensions() == 2) 
+            {
+                llvm::Value* idx = Builder->CreateMul(symbol_table->getArrayParam((node.var)->id), first_array_param, "mul_tmp");
+                ir_ret = Builder->CreateAdd(ir_ret, idx, "add_tmp");
+            }
             idxs.push_back(ir_ret);
 
             llvm::Value* array_val = symbol_table->getVal((node.var)->id);
@@ -532,6 +567,12 @@ public:
                 vector<llvm::Value*> idxs;
                 if(symbol_table->isGlobalVariable((node.init_var)->id)) 
                     idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+
+                if((node.init_var)->getDimensions() == 2) 
+                {
+                    llvm::Value* idx = Builder->CreateMul(symbol_table->getArrayParam((node.init_var)->id), first_array_param, "mul_tmp");
+                    ir_ret = Builder->CreateAdd(ir_ret, idx, "add_tmp");
+                }
                 idxs.push_back(ir_ret);
 
                 llvm::Value* array_val = symbol_table->getVal((node.init_var)->id);
@@ -584,6 +625,11 @@ public:
                 vector<llvm::Value*> idxs;
                 if(symbol_table->isGlobalVariable((node.loop_var)->id)) 
                     idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+                if((node.loop_var)->getDimensions() == 2) 
+                {
+                    llvm::Value* idx = Builder->CreateMul(symbol_table->getArrayParam((node.loop_var)->id), first_array_param, "mul_tmp");
+                    ir_ret = Builder->CreateAdd(ir_ret, idx, "add_tmp");
+                }
                 idxs.push_back(ir_ret);
 
                 llvm::Value* array_val = symbol_table->getVal((node.loop_var)->id);
