@@ -13,6 +13,8 @@
         "tuple": "cpp",
         "utility": "cpp",
         "system_error": "cpp",
-        "*.def": "cpp"
+        "*.def": "cpp",
+        "deque": "cpp",
+        "list": "cpp"
     }
 }

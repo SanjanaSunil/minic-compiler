@@ -65,4 +65,15 @@ public:
     bool isGlobal() {
         return (scopes.size() == 1);
     }
+
+    bool isGlobalVariable(string id) {
+        int n = scopes.size();
+        for(int i=n-1; i>=0; --i)
+        {
+            if(scopes[i]->existsInScope(id))
+                return (i == 0) ? true : false;
+        }
+
+        return false;
+    }
 };

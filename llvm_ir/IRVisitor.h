@@ -330,7 +330,11 @@ public:
 
         if((node.var)->getDimensions() > 0)
         {
-            vector<llvm::Value*> idxs = {ir_ret};
+            vector<llvm::Value*> idxs;
+            if(symbol_table->isGlobalVariable((node.var)->id)) 
+                idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+            idxs.push_back(ir_ret);
+
             llvm::Value* array_val = symbol_table->getVal((node.var)->id);
             ir_ret = Builder->CreateInBoundsGEP(array_val, idxs, (node.var)->id + "$");
         }
@@ -354,7 +358,12 @@ public:
             llvm::Value* exp_val = ir_ret;
 
             (node.var)->accept(*this);
-            vector<llvm::Value*> idxs = {ir_ret};
+            
+            vector<llvm::Value*> idxs;
+            if(symbol_table->isGlobalVariable((node.var)->id)) 
+                idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+            idxs.push_back(ir_ret);
+
             llvm::Value* array_val = symbol_table->getVal((node.var)->id);
             auto idx_ptr = Builder->CreateInBoundsGEP(array_val, idxs, (node.var)->id + "$");
 
@@ -509,7 +518,11 @@ public:
                 llvm::Value* exp_val = ir_ret;
 
                 (node.init_var)->accept(*this);
-                vector<llvm::Value*> idxs = {ir_ret};
+                vector<llvm::Value*> idxs;
+                if(symbol_table->isGlobalVariable((node.init_var)->id)) 
+                    idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+                idxs.push_back(ir_ret);
+
                 llvm::Value* array_val = symbol_table->getVal((node.init_var)->id);
                 auto idx_ptr = Builder->CreateInBoundsGEP(array_val, idxs, (node.init_var)->id + "$");
 
@@ -557,7 +570,11 @@ public:
                 llvm::Value* exp_val = ir_ret;
 
                 (node.loop_var)->accept(*this);
-                vector<llvm::Value*> idxs = {ir_ret};
+                vector<llvm::Value*> idxs;
+                if(symbol_table->isGlobalVariable((node.loop_var)->id)) 
+                    idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+                idxs.push_back(ir_ret);
+
                 llvm::Value* array_val = symbol_table->getVal((node.loop_var)->id);
                 auto idx_ptr = Builder->CreateInBoundsGEP(array_val, idxs, (node.loop_var)->id + "$");
 

@@ -1,12 +1,7 @@
 int arr[20];
-// func void trial(int r) {
-
-// }
 
 func int main() {
+    arr[0] = 12;
     printf("%d", arr[0]);
-    // int x = 1 + 2;
-    // x = 5;
-    // scanf("%d", x);
     return 0;
 }
