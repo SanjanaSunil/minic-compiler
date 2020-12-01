@@ -16,12 +16,14 @@ func int numberOfDigits(int n) {
 
 func int main() {
     int n;
-    input(n);
+    // input(n);
+    scanf("%d", n);
     
     int arr[n], final[n];
     for(int i=0; i<n; i=i+1)
     {
-        input(arr[i]);
+        // input(arr[i]);
+        scanf("%d", arr[i]);
     }
 
     int maxDigits = 0;
@@ -68,7 +70,8 @@ func int main() {
 
     for(int i=0; i<n; i=i+1)
     {
-        print(arr[i], " ");
+        // print(arr[i], " ");
+        printf("%d ", arr[i]);
     }
     return 0;
 }
