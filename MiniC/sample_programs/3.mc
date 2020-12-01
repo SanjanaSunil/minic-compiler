@@ -17,7 +17,8 @@ func bool isPrime(int n) {
 
 func int main() {
     int N;
-    input(N);
+    // input(N);
+    scanf("%d", N);
 
     int ans = 0;
     for(int i=1; i<N; i=i+1)
@@ -28,7 +29,8 @@ func int main() {
         }
     }
 
-    print(ans);
-    
+    // print(ans);
+    printf("%d", ans);
+
     return 0;
 }

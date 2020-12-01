@@ -90,24 +90,51 @@ public:
             // Change to include assignment 
             if(symbol_table->isGlobal())
             {
-                auto ir_val = new llvm::GlobalVariable(*Module, 
-                                                        getLLVMType(node.node_type), 
-                                                        false,
-                                                        llvm::GlobalValue::PrivateLinkage, 
-                                                        NULL, 
-                                                        varDecl->getId());
-
-                symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
-
-                if(node.node_type == INT) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
-                else if(node.node_type == FLOAT) ir_val->setInitializer(llvm::ConstantFP::get(getLLVMType(FLOAT), 0.0));
-                else if(node.node_type == CHAR) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(CHAR), '$'));
-                else if(node.node_type == BOOL) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(BOOL), false));
-
-                if(varDecl->var_assign)
+                if(dims > 0)
                 {
-                    llvm::Value* lhs_val = symbol_table->getVal(varDecl->getId());
-                    ir_val->setInitializer((llvm::Constant*) ir_ret);
+                    ASTExprInt* int_node = dynamic_cast<ASTExprInt*>(varDecl->var->param1);
+                    auto var_type = llvm::ArrayType::get(getLLVMType(node.node_type), int_node->intlit);
+                    auto ir_val = new llvm::GlobalVariable(*Module, 
+                                                            var_type, 
+                                                            false,
+                                                            llvm::GlobalValue::PrivateLinkage, 
+                                                            NULL, 
+                                                            varDecl->getId());
+
+                    vector<llvm::Constant*> global_arr_vals;
+                    for(int i=0; i<int_node->intlit; ++i)
+                    {
+                        if(node.node_type == INT) global_arr_vals.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
+                        else if(node.node_type == FLOAT) global_arr_vals.push_back(llvm::ConstantFP::get(getLLVMType(FLOAT), 0.0));
+                        else if(node.node_type == CHAR) global_arr_vals.push_back(llvm::ConstantInt::get(getLLVMType(CHAR), '$'));
+                        else if(node.node_type == BOOL) global_arr_vals.push_back(llvm::ConstantInt::get(getLLVMType(BOOL), false));
+                    }
+
+                    ir_val->setInitializer(llvm::ConstantArray::get(var_type, global_arr_vals));
+
+                    symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
+                }
+                else
+                {
+                    auto ir_val = new llvm::GlobalVariable(*Module, 
+                                                            getLLVMType(node.node_type), 
+                                                            false,
+                                                            llvm::GlobalValue::PrivateLinkage, 
+                                                            NULL, 
+                                                            varDecl->getId());
+
+                    symbol_table->addVariableToCurrentScope(varDecl->getId(), ir_val);
+
+                    if(node.node_type == INT) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(INT), 0, true));
+                    else if(node.node_type == FLOAT) ir_val->setInitializer(llvm::ConstantFP::get(getLLVMType(FLOAT), 0.0));
+                    else if(node.node_type == CHAR) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(CHAR), '$'));
+                    else if(node.node_type == BOOL) ir_val->setInitializer(llvm::ConstantInt::get(getLLVMType(BOOL), false));
+
+                    if(varDecl->var_assign)
+                    {
+                        llvm::Value* lhs_val = symbol_table->getVal(varDecl->getId());
+                        ir_val->setInitializer((llvm::Constant*) ir_ret);
+                    }
                 }
             }
             else
@@ -126,7 +153,6 @@ public:
                     Builder->CreateStore(ir_ret, lhs_val);
                 }
             }
-
         }
     }
 

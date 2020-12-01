@@ -9,7 +9,8 @@ func int computePower(int num, int k) {
 
 func int main() {
     int N, k;
-    input(N, k);
+    scanf("%d %d", N, k);
+    // input(N, k);
 
     int g = 0;
 
@@ -18,7 +19,8 @@ func int main() {
         g = g + computePower(i, k); 
     }
 
-    print(g);
+    printf("%d", g);
+    // print(g);
 
     return 0;
 }

@@ -1,13 +1,10 @@
+int arr[20];
 // func void trial(int r) {
 
 // }
 
 func int main() {
-    int arr[20];
-    arr[0] = 5;
-    int x = 2;
-    scanf("%d", x);
-    printf("%d", x);
+    printf("%d", arr[0]);
     // int x = 1 + 2;
     // x = 5;
     // scanf("%d", x);

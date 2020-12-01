@@ -1,10 +1,11 @@
 func int main() {
     int N;
-    input(N);
+    // input(N);
+    scanf("%d", N);
 
     if(N <= 1)
     {
-        print("NO");
+        printf("NO");
         return 0;
     }
 
@@ -12,12 +13,12 @@ func int main() {
     {
         if(N % i == 0)
         {
-            print("NO");
+            printf("NO");
             return 0;
         }
     }
 
-    print("YES");
+    printf("YES");
 
     return 0;
 }

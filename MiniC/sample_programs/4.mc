@@ -16,7 +16,7 @@ func int main() {
         }
     }
 
-    print(ans);
+    printf("%d", ans);
 
     return 0;
 }
