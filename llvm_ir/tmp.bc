@@ -1,7 +1,8 @@
 ; ModuleID = 'MiniC'
 source_filename = "MiniC"
 
-@0 = private unnamed_addr constant [6 x i8] c"\22%d \22\00", align 1
+@0 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
+@1 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
 
 declare i32 @printf(i8*, ...)
 
@@ -9,115 +10,13 @@ declare i32 @scanf(i8*, ...)
 
 define i32 @main() {
 entry:
-  %n = alloca i32, align 4
-  store i32 10, i32* %n, align 4
-  %0 = load i32, i32* %n, align 4
-  %arr = alloca i32, i32 %0, align 4
+  %arr = alloca i32, i32 20, align 4
   %"arr$" = getelementptr inbounds i32, i32* %arr, i32 0
-  store i32 20, i32* %"arr$", align 4
-  %i = alloca i32, align 4
-  store i32 1, i32* %i, align 4
-  br label %loopcond
-
-loopcond:                                         ; preds = %loopbody, %entry
-  %1 = load i32, i32* %i, align 4
-  %2 = load i32, i32* %n, align 4
-  %lt = icmp slt i32 %1, %2
-  br i1 %lt, label %loopbody, label %outer
-
-loopbody:                                         ; preds = %loopcond
-  %3 = load i32, i32* %i, align 4
-  %sub = sub i32 %3, 1
-  %"arr$1" = getelementptr inbounds i32, i32* %arr, i32 %sub
-  %4 = load i32, i32* %"arr$1", align 4
-  %sub2 = sub i32 %4, 1
-  %5 = load i32, i32* %i, align 4
-  %"arr$3" = getelementptr inbounds i32, i32* %arr, i32 %5
-  store i32 %sub2, i32* %"arr$3", align 4
-  %6 = load i32, i32* %i, align 4
-  %add = add i32 %6, 1
-  store i32 %add, i32* %i, align 4
-  br label %loopcond
-
-outer:                                            ; preds = %loopcond
-  %i4 = alloca i32, align 4
-  store i32 1, i32* %i4, align 4
-  br label %loopcond5
-
-loopcond5:                                        ; preds = %outer17, %outer
-  %7 = load i32, i32* %i4, align 4
-  %8 = load i32, i32* %n, align 4
-  %lt6 = icmp slt i32 %7, %8
-  br i1 %lt6, label %loopbody7, label %outer21
-
-loopbody7:                                        ; preds = %loopcond5
-  %9 = load i32, i32* %i4, align 4
-  %"arr$8" = getelementptr inbounds i32, i32* %arr, i32 %9
-  %10 = load i32, i32* %"arr$8", align 4
-  %val = alloca i32, align 4
-  store i32 %10, i32* %val, align 4
-  %11 = load i32, i32* %i4, align 4
-  %sub9 = sub i32 %11, 1
-  %j = alloca i32, align 4
-  store i32 %sub9, i32* %j, align 4
-  br label %loopcond10
-
-loopcond10:                                       ; preds = %loopbody12, %loopbody7
-  %12 = load i32, i32* %j, align 4
-  %ge = icmp sge i32 %12, 0
-  %13 = load i32, i32* %j, align 4
-  %"arr$11" = getelementptr inbounds i32, i32* %arr, i32 %13
-  %14 = load i32, i32* %"arr$11", align 4
-  %15 = load i32, i32* %val, align 4
-  %gt = icmp sgt i32 %14, %15
-  %and = and i1 %ge, %gt
-  br i1 %and, label %loopbody12, label %outer17
-
-loopbody12:                                       ; preds = %loopcond10
-  %16 = load i32, i32* %j, align 4
-  %"arr$13" = getelementptr inbounds i32, i32* %arr, i32 %16
-  %17 = load i32, i32* %"arr$13", align 4
-  %18 = load i32, i32* %j, align 4
-  %add14 = add i32 %18, 1
-  %"arr$15" = getelementptr inbounds i32, i32* %arr, i32 %add14
-  store i32 %17, i32* %"arr$15", align 4
-  %19 = load i32, i32* %j, align 4
-  %sub16 = sub i32 %19, 1
-  store i32 %sub16, i32* %j, align 4
-  br label %loopcond10
-
-outer17:                                          ; preds = %loopcond10
-  %20 = load i32, i32* %val, align 4
-  %21 = load i32, i32* %j, align 4
-  %add18 = add i32 %21, 1
-  %"arr$19" = getelementptr inbounds i32, i32* %arr, i32 %add18
-  store i32 %20, i32* %"arr$19", align 4
-  %22 = load i32, i32* %i4, align 4
-  %add20 = add i32 %22, 1
-  store i32 %add20, i32* %i4, align 4
-  br label %loopcond5
-
-outer21:                                          ; preds = %loopcond5
-  %i22 = alloca i32, align 4
-  store i32 0, i32* %i22, align 4
-  br label %loopcond23
-
-loopcond23:                                       ; preds = %loopbody25, %outer21
-  %23 = load i32, i32* %i22, align 4
-  %24 = load i32, i32* %n, align 4
-  %lt24 = icmp slt i32 %23, %24
-  br i1 %lt24, label %loopbody25, label %outer28
-
-loopbody25:                                       ; preds = %loopcond23
-  %25 = load i32, i32* %i22, align 4
-  %"arr$26" = getelementptr inbounds i32, i32* %arr, i32 %25
-  %26 = load i32, i32* %"arr$26", align 4
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @0, i32 0, i32 0), i32 %26)
-  %27 = load i32, i32* %i22, align 4
-  %add27 = add i32 %27, 1
-  store i32 %add27, i32* %i22, align 4
-  br label %loopcond23
-
-outer28:                                          ; preds = %loopcond23
+  store i32 5, i32* %"arr$", align 4
+  %x = alloca i32, align 4
+  store i32 2, i32* %x, align 4
+  %scanf = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @0, i32 0, i32 0), i32* %x)
+  %0 = load i32, i32* %x, align 4
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @1, i32 0, i32 0), i32 %0)
   ret i32 0
 }

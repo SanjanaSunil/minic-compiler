@@ -3,22 +3,11 @@
 // }
 
 func int main() {
-    float x = 2.1;
-    printf("%f", x);
-
-    if(true)
-    {
-        printf("sdfjsdf");
-        if(true)
-        {
-            int y = 1;
-        }
-        return 1;
-    }
-    else
-    {
-        int a = 2;
-    }
+    int arr[20];
+    arr[0] = 5;
+    int x = 2;
+    scanf("%d", x);
+    printf("%d", x);
     // int x = 1 + 2;
     // x = 5;
     // scanf("%d", x);

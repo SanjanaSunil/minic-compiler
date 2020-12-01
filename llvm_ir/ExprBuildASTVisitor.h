@@ -403,8 +403,10 @@ public:
     virtual antlrcpp::Any visitExprString(ExprParser::ExprStringContext *context)
     {
         // cout << "In visitExprString" << endl;
-        ASTExprString *node = new ASTExprString(context->STRING()->getText());
-        
+        ASTExprString *node = new ASTExprString(context->STRING()->getText());        
+        int str_size = (node->stringlit).size();
+        node->stringlit = (node->stringlit).substr(1, str_size - 2);
+
         node->node_type = STRING;
         return (ASTExpr *) node;
     }

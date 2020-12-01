@@ -12,6 +12,7 @@
         "functional": "cpp",
         "tuple": "cpp",
         "utility": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "*.def": "cpp"
     }
 }
