@@ -1,11 +1,13 @@
 func int main() {
     int n;
-    input(n);
+    // input(n);
+    scanf("%d", n);
 
     int arr[n];
     for(int i=0; i<n; i=i+1)
     {
-        input(arr[i]);
+        // input(arr[i]);
+        scanf("%d", arr[i]);
     }
 
     for(int i=1; i<n; i=i+1)
@@ -22,9 +24,9 @@ func int main() {
 
     for(int i=0; i<n; i=i+1)
     {
-        print(arr[i], " ");
+        // print(arr[i], " ");
+        printf("%d ", arr[i]);
     }
-    print("\n");
 
     return 0;
 }

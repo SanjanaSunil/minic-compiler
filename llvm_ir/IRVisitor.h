@@ -9,6 +9,7 @@ class IRVisitor : public ASTvisitor
     unique_ptr<llvm::IRBuilder<>> Builder;
 
     llvm::Value *ir_ret;
+    bool scanf_present;
 
 public:
     unique_ptr<llvm::Module> Module;
@@ -227,11 +228,26 @@ public:
         llvm::Function *CalleeF = Module->getFunction(node.id);
         vector<llvm::Value*> ArgsV;
 
-        for (unsigned i = 0, e = node.funcArgList.size(); i != e; ++i) {    
+        for (unsigned i = 0, e = node.funcArgList.size(); i != e; ++i)
+        {   
             if(node.id == "scanf" && i != 0) 
             {
                 ASTExprVar* variable = dynamic_cast<ASTExprVar*>(node.funcArgList[i]);
-                ArgsV.push_back(symbol_table->getVal(variable->var->id));
+
+                (variable->var)->accept(*this);
+                if((variable->var)->getDimensions() > 0)
+                {
+                    vector<llvm::Value*> idxs;
+                    if(symbol_table->isGlobalVariable((variable->var)->id)) 
+                        idxs.push_back(llvm::ConstantInt::get(getLLVMType(INT), 0));
+                    idxs.push_back(ir_ret);
+
+                    llvm::Value* array_val = symbol_table->getVal((variable->var)->id);
+                    ir_ret = Builder->CreateInBoundsGEP(array_val, idxs, (variable->var)->id + "$");
+                }
+                else ir_ret = symbol_table->getVal(variable->var->id);
+
+                ArgsV.push_back(ir_ret);
             }
             else 
             {
@@ -247,6 +263,7 @@ public:
 
         if(CalleeF->getReturnType()->isVoidTy()) ir_ret = Builder->CreateCall(CalleeF, ArgsV);
         else ir_ret = Builder->CreateCall(CalleeF, ArgsV, node.id);
+
     }
 
     virtual void visit(ASTExpr &node)

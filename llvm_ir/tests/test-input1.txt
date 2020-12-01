@@ -1,7 +1,16 @@
-int arr[20];
-
 func int main() {
-    arr[0] = 12;
-    printf("%d", arr[0]);
+    // int n;
+    // input(n);
+    // scanf("%d", n);
+
+    int arr[5];
+    
+    int i = 2;
+    scanf("%d", arr[i]);
+    // scanf("%d", arr[1]);
+
+    // printf("%d ", arr[0]);
+    printf("%d", arr[i]);
+
     return 0;
 }
